@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import LiquidGlassContainer from './LiquidGlassContainer';
+import { Users, Copy as CopyIcon, Crown, Wifi } from 'lucide-react';
 
 type ChatMsg = { id: string; sender?: string; text: string; ts: number };
 
@@ -21,6 +22,7 @@ export default function WatchPartyPanel() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const suppressRef = useRef<boolean>(false);
   const createdRoomRef = useRef<boolean>(false);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     selfIdRef.current = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -38,6 +40,13 @@ export default function WatchPartyPanel() {
       if (auth?.username && !name) setName(auth.username);
     } catch {}
   }, []);
+
+  useEffect(() => {
+    // 新消息到达时自动滚动到底部
+    try {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } catch {}
+  }, [messages]);
 
   const getVideo = (): HTMLVideoElement | null => {
     if (videoRef.current && document.contains(videoRef.current)) return videoRef.current;
@@ -202,50 +211,84 @@ export default function WatchPartyPanel() {
 
   return (
     <div className='space-y-3'>
+      {/* 顶部工具栏 */}
       <LiquidGlassContainer className='px-3 py-2 flex items-center gap-2' roundedClass='rounded-full' intensity='medium' shadow='lg' border='subtle'>
-        <span className='text-xs font-semibold text-gray-700 dark:text-gray-200'>一起观看</span>
-        <input value={room} onChange={(e) => setRoom(e.target.value.trim())} placeholder='房间号' className='text-xs px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/60' />
+        {/* 连接状态与主机徽标 */}
+        <span className={`flex items-center gap-1 text-xs ${connected ? 'text-green-600' : 'text-gray-500'} `}>
+          <Wifi className='w-3 h-3' />
+          {connected ? '已加入' : '未加入'}
+        </span>
+        {createdRoomRef.current && (
+          <span className='text-[10px] px-2 py-[2px] rounded-full bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 flex items-center gap-1'>
+            <Crown className='w-3 h-3' /> 主机
+          </span>
+        )}
+
+        {/* 房间信息与邀请 */}
+        <span className='ml-1 text-xs px-2 py-1 rounded-full bg-white/60 dark:bg-gray-800/40 border border-white/30 dark:border-gray-700/40 text-gray-700 dark:text-gray-200'>
+          房间：{room || '未设置'}
+        </span>
+        <button onClick={copyInvite} title='复制邀请链接' className='text-xs px-2 py-1 rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center gap-1'>
+          <CopyIcon className='w-3 h-3' />复制
+        </button>
+        <button onClick={createRoom} className='text-xs px-2 py-1 rounded-full bg-indigo-600 text-white hover:bg-indigo-700'>生成
+        </button>
+
+        {/* 昵称 */}
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder='昵称' className='text-xs px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/60' />
-        <button onClick={createRoom} className='text-xs px-3 py-1 rounded-full bg-indigo-600 text-white hover:bg-indigo-700'>生成房间号</button>
-        <button onClick={copyInvite} className='text-xs px-3 py-1 rounded-full bg-gray-700 text-white hover:bg-gray-800'>复制邀请</button>
+
+        {/* 加入/离开 */}
         {!connected ? (
           <button onClick={connect} className='text-xs px-3 py-1 rounded-full bg-green-600 text-white hover:bg-green-700'>加入/创建</button>
         ) : (
           <button onClick={disconnect} className='text-xs px-3 py-1 rounded-full bg-red-600 text-white hover:bg-red-700'>离开</button>
         )}
-        <label className='flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300'>
+
+        {/* 跟随主机开关 */}
+        <label className='ml-auto flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300'>
           <input type='checkbox' checked={followHost} onChange={(e) => setFollowHost(e.target.checked)} />
           跟随主机
         </label>
-        <span className='ml-auto text-xs text-gray-600 dark:text-gray-400'>成员：{members.length}</span>
       </LiquidGlassContainer>
 
+      {/* 成员与聊天 */}
       <LiquidGlassContainer className='px-3 py-2' roundedClass='rounded-2xl' intensity='medium' shadow='lg' border='subtle'>
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-3'>
-          <div className='md:col-span-1'>
-            <div className='text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2'>在线成员</div>
-            <ul className='space-y-1'>
-              {members.length === 0 && <li className='text-xs text-gray-500 dark:text-gray-400'>暂无成员</li>}
-              {members.map((m, i) => (
-                <li key={`${m}-${i}`} className='text-xs text-gray-800 dark:text-gray-100'>{m}</li>
+        <div className='flex items-center justify-between mb-2'>
+          <div className='flex items-center gap-2'>
+            <span className='text-xs font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-1'><Users className='w-3 h-3' />成员</span>
+            <div className='flex items-center gap-1'>
+              {members.length === 0 && <span className='text-xs text-gray-500 dark:text-gray-400'>暂无成员</span>}
+              {members.slice(0, 6).map((m, i) => (
+                <span key={`${m}-${i}`} className='text-[10px] px-2 py-[2px] rounded-full bg-white/60 dark:bg-gray-800/40 border border-white/30 dark:border-gray-700/40 text-gray-700 dark:text-gray-200'>
+                  {m.slice(0, 8)}
+                </span>
               ))}
-            </ul>
+              {members.length > 6 && (
+                <span className='text-[10px] px-2 py-[2px] rounded-full bg-white/60 dark:bg-gray-800/40 border border-white/30 dark:border-gray-700/40 text-gray-700 dark:text-gray-200'>+{members.length - 6}</span>
+              )}
+            </div>
           </div>
-          <div className='md:col-span-3'>
-            <div className='text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2'>聊天</div>
-            <div className='h-32 overflow-y-auto rounded-md bg-white/50 dark:bg-gray-800/50 border border-white/20 dark:border-gray-700/40 p-2'>
-              {messages.length === 0 && <div className='text-xs text-gray-500 dark:text-gray-400'>暂无消息</div>}
-              {messages.map((msg) => (
-                <div key={msg.id} className='text-xs text-gray-800 dark:text-gray-100'>
-                  <span className='font-semibold'>{msg.sender ? String(msg.sender).slice(0, 6) : '匿名'}</span>: {msg.text}
+          <span className='text-xs text-gray-600 dark:text-gray-400'>共 {members.length} 人</span>
+        </div>
+
+        <div className='text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2'>聊天</div>
+        <div className='h-32 overflow-y-auto rounded-md bg-white/50 dark:bg-gray-800/50 border border-white/20 dark:border-gray-700/40 p-2'>
+          {messages.length === 0 && <div className='text-xs text-gray-500 dark:text-gray-400'>暂无消息</div>}
+          {messages.map((msg) => {
+            const self = msg.sender === selfIdRef.current;
+            return (
+              <div key={msg.id} className={`flex ${self ? 'justify-end' : 'justify-start'} mb-1`}>
+                <div className={`max-w-[75%] px-2 py-1 rounded-2xl text-xs ${self ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100'}`}>
+                  {msg.text}
                 </div>
-              ))}
-            </div>
-            <div className='mt-2 flex items-center gap-2'>
-              <input value={chatText} onChange={(e) => setChatText(e.target.value)} placeholder='输入消息' className='flex-1 text-xs px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/60' />
-              <button onClick={sendChat} className='text-xs px-3 py-1 rounded-full bg-blue-600 text-white hover:bg-blue-700'>发送</button>
-            </div>
-          </div>
+              </div>
+            );
+          })}
+          <div ref={chatEndRef} />
+        </div>
+        <div className='mt-2 flex items-center gap-2'>
+          <input value={chatText} onChange={(e) => setChatText(e.target.value)} placeholder='输入消息' className='flex-1 text-xs px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/60' />
+          <button onClick={sendChat} className='text-xs px-3 py-1 rounded-full bg-blue-600 text-white hover:bg-blue-700'>发送</button>
         </div>
       </LiquidGlassContainer>
     </div>
