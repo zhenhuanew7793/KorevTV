@@ -4141,6 +4141,15 @@ function PlayPageClient() {
                   className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg'
                 ></div>
 
+                {/* 快捷键帮助按钮 - 播放器内左上角 */}
+                <button
+                  onClick={() => setShowShortcutHelp(true)}
+                  className='absolute left-4 top-4 z-10 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm text-white text-sm font-bold flex items-center justify-center hover:bg-black/50 transition-all'
+                  aria-label='快捷键帮助'
+                >
+                  ?
+                </button>
+
                 {/* 跳过设置按钮 - 播放器内右上角 */}
                 {currentSource && currentId && (
                   <div className='absolute top-4 right-4 z-10'>
@@ -4715,14 +4724,7 @@ function PlayPageClient() {
         <ChevronUp className='w-6 h-6 text-white relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1' />
       </button>
 
-      {/* 快捷键帮助按钮（左上角） */}
-      <button
-        onClick={() => setShowShortcutHelp(true)}
-        className='fixed left-3 top-3 z-[600] w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm text-white text-sm font-bold flex items-center justify-center hover:bg-black/50 transition-all'
-        aria-label='快捷键帮助'
-      >
-        ?
-      </button>
+      {/* 快捷键帮助按钮已移动到播放器内 */}
 
       {/* 快捷键帮助弹层 */}
       {showShortcutHelp && (
