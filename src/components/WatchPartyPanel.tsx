@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import LiquidGlassContainer from './LiquidGlassContainer';
-import { Users, Copy as CopyIcon, Crown, Wifi, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, Copy as CopyIcon, Crown, Wifi, ChevronDown, ChevronUp, QrCode } from 'lucide-react';
 
 type ChatMsg = { id: string; sender?: string; text: string; ts: number };
 
@@ -24,6 +24,8 @@ export default function WatchPartyPanel() {
   const createdRoomRef = useRef<boolean>(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const [showChat, setShowChat] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const initialSyncedRef = useRef<boolean>(false);
 
   useEffect(() => {
     selfIdRef.current = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -108,6 +110,7 @@ export default function WatchPartyPanel() {
             setTimeout(() => (suppressRef.current = false), 300);
           };
           if (data.initial) {
+            initialSyncedRef.current = true;
             applySync();
           } else if (followHost) {
             applySync();
@@ -151,6 +154,28 @@ export default function WatchPartyPanel() {
         emit('playback', { state, time: v.currentTime });
       }
     }, 150);
+
+    // 快照兜底：若未收到 initial 对齐事件，主动请求一次房间快照
+    setTimeout(async () => {
+      if (!initialSyncedRef.current && (room || targetRoom)) {
+        try {
+          const r = encodeURIComponent(room || targetRoom);
+          const resp = await fetch(`/api/watchparty/broadcast?action=snapshot&room=${r}`);
+          const json = await resp.json();
+          const v = getVideo();
+          if (v && json?.lastPlayback && typeof json.lastPlayback.time === 'number') {
+            suppressRef.current = true;
+            v.currentTime = json.lastPlayback.time;
+            if (json.lastPlayback.state === 'play') {
+              void v.play();
+            } else if (json.lastPlayback.state === 'pause') {
+              v.pause();
+            }
+            setTimeout(() => (suppressRef.current = false), 300);
+          }
+        } catch {}
+      }
+    }, 600);
   };
 
   const disconnect = () => {
@@ -216,6 +241,24 @@ export default function WatchPartyPanel() {
       setMessages((prev) => [...prev.slice(-50), { id: `sys-${Date.now()}`, text: '复制失败，请手动复制地址栏', ts: Date.now() }]);
     }
   };
+  const getInviteUrl = (): string => {
+    try {
+      const url = new URL(window.location.href);
+      const sp = new URLSearchParams(url.search);
+      if (room) sp.set('room', room);
+      if (name) sp.set('name', name);
+      url.search = sp.toString();
+      return url.toString();
+    } catch {
+      return '';
+    }
+  };
+  const setAsHost = () => {
+    if (!connected) return;
+    createdRoomRef.current = true;
+    emit('presence', { action: 'join', name, isHost: true });
+    setMessages((prev) => [...prev.slice(-50), { id: `sys-${Date.now()}`, text: '已设为主机', ts: Date.now() }]);
+  };
 
   return (
     <div className='space-y-3'>
@@ -239,6 +282,9 @@ export default function WatchPartyPanel() {
         <button onClick={copyInvite} title='复制邀请链接' className='text-xs px-2 py-1 rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center gap-1'>
           <CopyIcon className='w-3 h-3' />复制
         </button>
+        <button onClick={() => setShowQr(true)} title='显示二维码' className='text-xs px-2 py-1 rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center gap-1'>
+          <QrCode className='w-3 h-3' />二维码
+        </button>
         <button onClick={createRoom} className='text-xs px-2 py-1 rounded-full bg-indigo-600 text-white hover:bg-indigo-700'>生成
         </button>
 
@@ -251,6 +297,9 @@ export default function WatchPartyPanel() {
         ) : (
           <button onClick={disconnect} className='text-xs px-3 py-1 rounded-full bg-red-600 text-white hover:bg-red-700'>离开</button>
         )}
+        {connected && (
+          <button onClick={setAsHost} className='text-[10px] px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border border-yellow-600/30 ml-1'>设为主机</button>
+        )}
 
         {/* 跟随主机开关 */}
         <label className='ml-auto flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300'>
@@ -258,6 +307,30 @@ export default function WatchPartyPanel() {
           跟随主机
         </label>
       </LiquidGlassContainer>
+
+      {showQr && (
+        <div className='fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4'>
+          <LiquidGlassContainer className='w-full max-w-sm p-4 flex flex-col items-center gap-3' roundedClass='rounded-2xl' intensity='strong' shadow='xl' border='subtle'>
+            <div className='text-sm font-semibold text-gray-800 dark:text-gray-100'>房间二维码</div>
+            <div className='w-[196px] h-[196px] rounded-2xl overflow-hidden bg-white dark:bg-gray-800 flex items-center justify-center'>
+              {/* 轻量方案：使用在线API生成二维码；若加载异常，显示邀请链接 */}
+              {(() => {
+                const data = getInviteUrl();
+                const src = `https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=${encodeURIComponent(data)}`;
+                return data ? (
+                  <img src={src} alt='房间邀请二维码' className='w-[190px] h-[190px]' />
+                ) : (
+                  <div className='p-2 text-xs text-gray-600 dark:text-gray-300 break-all'>{getInviteUrl()}</div>
+                );
+              })()}
+            </div>
+            <div className='flex items-center gap-2'>
+              <button onClick={copyInvite} className='text-xs px-3 py-1 rounded-full bg-gray-700 text-white hover:bg-gray-800'>复制邀请</button>
+              <button onClick={() => setShowQr(false)} className='text-xs px-3 py-1 rounded-full bg-gray-500 text-white hover:bg-gray-600'>关闭</button>
+            </div>
+          </LiquidGlassContainer>
+        </div>
+      )}
 
       {/* 成员与聊天 */}
       <LiquidGlassContainer className='px-3 py-2' roundedClass='rounded-2xl' intensity='medium' shadow='lg' border='subtle'>

@@ -81,7 +81,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'GET') {
-    res.status(200).json({ ok: true, message: 'watchparty broadcast endpoint (POST to broadcast events)' });
+    try {
+      const { action, room = 'default' } = req.query as { action?: string; room?: string };
+      if (action === 'snapshot') {
+        const channel = getChannel();
+        const state = channel.rooms.get(room);
+        res.status(200).json({
+          ok: true,
+          hostId: state?.hostId,
+          lastPlayback: state?.lastPlayback || null,
+          members: state ? Array.from(state.members.values()) : []
+        });
+        return;
+      }
+      res.status(200).json({ ok: true, message: 'watchparty broadcast endpoint (POST to broadcast events)' });
+    } catch (e) {
+      res.status(500).json({ ok: false, error: String(e) });
+    }
     return;
   }
   if (req.method === 'HEAD') {
