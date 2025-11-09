@@ -32,6 +32,7 @@ import {
   subscribeToWatchingUpdatesEvent,
   checkWatchingUpdates,
   type WatchingUpdate,
+  markUpdatesAsViewed,
 } from '@/lib/watching-updates';
 import {
   getAllPlayRecords,
@@ -587,6 +588,22 @@ export const UserMenu: React.FC = () => {
 
   const handleCloseWatchingUpdates = () => {
     setIsWatchingUpdatesOpen(false);
+  };
+
+  const handleMarkWatchingUpdatesAsRead = () => {
+    try {
+      // 标记更新为已读并更新缓存/事件
+      markUpdatesAsViewed();
+      setHasUnreadUpdates(false);
+      const currentTime = Date.now();
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('watchingUpdatesLastViewed', currentTime.toString());
+      }
+    } catch (e) {
+      console.error('标记更新提醒为已读失败:', e);
+    } finally {
+      setIsWatchingUpdatesOpen(false);
+    }
   };
 
   const handleContinueWatching = () => {
@@ -1800,13 +1817,22 @@ export const UserMenu: React.FC = () => {
                 )}
               </div>
             </div>
-            <button
-              onClick={handleCloseWatchingUpdates}
-              className='w-8 h-8 p-1 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
-              aria-label='Close'
-            >
-              <X className='w-full h-full' />
-            </button>
+            <div className='flex items-center gap-2'>
+              <button
+                onClick={handleMarkWatchingUpdatesAsRead}
+                className='px-3 py-1.5 rounded-full text-xs font-medium bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1'
+                aria-label='标记为已读'
+              >
+                <Check className='w-4 h-4' /> 已读
+              </button>
+              <button
+                onClick={handleCloseWatchingUpdates}
+                className='w-8 h-8 p-1 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
+                aria-label='Close'
+              >
+                <X className='w-full h-full' />
+              </button>
+            </div>
           </div>
 
           {/* 更新列表 */}
