@@ -4,7 +4,7 @@
 
 import { Brain, Calendar, ChevronRight, Film, Play,Sparkles, Tv } from 'lucide-react';
 import Link from 'next/link';
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useCallback,useEffect, useState } from 'react';
 
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import {
@@ -190,9 +190,12 @@ function HomeClient() {
           const movies = moviesData.value.list;
           setHotMovies(movies);
 
-          // 异步获取前2条电影的详情（用于Hero Banner）
-          Promise.all(
-            movies.slice(0, 2).map(async (movie) => {
+          // 异步获取轮换选择的电影详情（用于Hero Banner）
+          const movieDetailsPromises = (() => {
+            if (!Array.isArray(movies) || movies.length === 0) return [] as Promise<any>[];
+            const start = rotationSeed % movies.length;
+            const picks = [movies[start], movies[(start + 1) % movies.length]].filter(Boolean);
+            return picks.map(async (movie) => {
               try {
                 const detailsRes = await getDoubanDetails(movie.id);
                 if (detailsRes.code === 200 && detailsRes.data?.plot_summary) {
@@ -202,8 +205,9 @@ function HomeClient() {
                 console.warn(`获取电影 ${movie.id} 详情失败:`, error);
               }
               return null;
-            })
-          ).then((results) => {
+            });
+          })();
+          Promise.all(movieDetailsPromises).then((results) => {
             setHotMovies(prev =>
               prev.map(m => {
                 const detail = results.find(r => r?.id === m.id);
@@ -220,9 +224,12 @@ function HomeClient() {
           const tvShows = tvShowsData.value.list;
           setHotTvShows(tvShows);
 
-          // 异步获取前2条剧集的详情（用于Hero Banner）
-          Promise.all(
-            tvShows.slice(0, 2).map(async (show) => {
+          // 异步获取轮换选择的剧集详情（用于Hero Banner）
+          const tvDetailsPromises = (() => {
+            if (!Array.isArray(tvShows) || tvShows.length === 0) return [] as Promise<any>[];
+            const start = (rotationSeed + 11) % tvShows.length;
+            const picks = [tvShows[start], tvShows[(start + 1) % tvShows.length]].filter(Boolean);
+            return picks.map(async (show) => {
               try {
                 const detailsRes = await getDoubanDetails(show.id);
                 if (detailsRes.code === 200 && detailsRes.data?.plot_summary) {
@@ -232,8 +239,9 @@ function HomeClient() {
                 console.warn(`获取剧集 ${show.id} 详情失败:`, error);
               }
               return null;
-            })
-          ).then((results) => {
+            });
+          })();
+          Promise.all(tvDetailsPromises).then((results) => {
             setHotTvShows(prev =>
               prev.map(s => {
                 const detail = results.find(r => r?.id === s.id);
@@ -250,9 +258,10 @@ function HomeClient() {
           const varietyShows = varietyShowsData.value.list;
           setHotVarietyShows(varietyShows);
 
-          // 异步获取第1条综艺的详情（用于Hero Banner）
+          // 异步获取轮换选择的综艺详情（用于Hero Banner）
           if (varietyShows.length > 0) {
-            const show = varietyShows[0];
+            const start = (rotationSeed + 23) % varietyShows.length;
+            const show = varietyShows[start];
             getDoubanDetails(show.id)
               .then((detailsRes) => {
                 if (detailsRes.code === 200 && detailsRes.data?.plot_summary) {
@@ -277,9 +286,12 @@ function HomeClient() {
           const dramas = shortDramasData.value;
           setHotShortDramas(dramas);
 
-          // 异步获取前2条短剧的详情（用于Hero Banner）
-          Promise.all(
-            dramas.slice(0, 2).map(async (drama) => {
+          // 异步获取轮换选择的短剧详情（用于Hero Banner）
+          const shortDramaPromises = (() => {
+            if (!Array.isArray(dramas) || dramas.length === 0) return [] as Promise<any>[];
+            const start = (rotationSeed + 31) % dramas.length;
+            const picks = [dramas[start], dramas[(start + 1) % dramas.length]].filter(Boolean);
+            return picks.map(async (drama) => {
               try {
                 const response = await fetch(`/api/shortdrama/detail?id=${drama.id}&episode=1`);
                 if (response.ok) {
@@ -292,8 +304,9 @@ function HomeClient() {
                 console.warn(`获取短剧 ${drama.id} 详情失败:`, error);
               }
               return null;
-            })
-          ).then((results) => {
+            });
+          })();
+          Promise.all(shortDramaPromises).then((results) => {
             setHotShortDramas(prev =>
               prev.map(d => {
                 const detail = results.find(r => r?.id === d.id);
@@ -319,9 +332,11 @@ function HomeClient() {
             (item) => item.weekday.en === currentWeekday
           )?.items || [];
 
-          // 如果今天有番剧且第一个番剧没有summary，尝试获取详情
-          if (todayAnimes.length > 0 && !todayAnimes[0].summary) {
-            const anime = todayAnimes[0];
+          // 如果今天有番剧且轮换选择的番剧没有summary，尝试获取详情
+          if (todayAnimes.length > 0) {
+            const index = (rotationSeed + 47) % todayAnimes.length;
+            const anime = todayAnimes[index];
+            if (anime && !anime.summary) {
             try {
               const response = await fetch(`https://api.bgm.tv/v0/subjects/${anime.id}`);
               if (response.ok) {
@@ -347,6 +362,7 @@ function HomeClient() {
               }
             } catch (error) {
               console.warn(`获取番剧 ${anime.id} 详情失败:`, error);
+            }
             }
           }
         } else {
@@ -398,7 +414,7 @@ function HomeClient() {
       } finally {
         setLoading(false);
       }
-  }, []);
+  }, [rotationSeed]);
 
   useEffect(() => {
     // 清理过期缓存并首次加载
