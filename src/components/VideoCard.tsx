@@ -21,7 +21,7 @@ import {
   saveFavorite,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { processImageUrl, isSeriesCompleted } from '@/lib/utils';
+import { isSeriesCompleted,processImageUrl } from '@/lib/utils';
 import { useLongPress } from '@/hooks/useLongPress';
 
 import { ImagePlaceholder } from '@/components/ImagePlaceholder';
@@ -936,7 +936,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             <div
               className={`absolute left-2 bg-gradient-to-br from-indigo-500/90 via-purple-500/90 to-pink-500/90 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg ring-2 ring-white/30 transition-all duration-300 ease-out group-hover:scale-105 group-hover:shadow-purple-500/50 group-hover:ring-purple-300/50 ${
                 (() => {
-                  let offset = 2; // 默认 top-2
+                  const offset = 2; // 默认 top-2
                   // 顶部只有年份徽章，不受其他徽章影响
                   return `top-[${offset}px]`;
                 })()

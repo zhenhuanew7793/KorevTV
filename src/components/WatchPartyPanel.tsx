@@ -9,7 +9,7 @@ import MobileActionSheet from '@/components/MobileActionSheet';
 
 import LiquidGlassContainer from './LiquidGlassContainer';
 
-type ChatMsg = { id: string; sender?: string; text: string; ts: number };
+type ChatMsg = { id: string; sender?: string; senderName?: string; text: string; ts: number };
 
 export default function WatchPartyPanel() {
   const [room, setRoom] = useState('');
@@ -60,7 +60,7 @@ export default function WatchPartyPanel() {
   }, [messages]);
 
   useEffect(() => {
-    // 桌面端默认展开聊天，移动端默认折叠
+    // 桌面端默认展开聊天，移动端默认折叠（仅在已连接面板显示时生效）
     try {
       setShowChat(window.innerWidth >= 768);
     } catch {}
@@ -137,6 +137,7 @@ export default function WatchPartyPanel() {
           const msg: ChatMsg = {
             id: `${data.ts}-${Math.random().toString(36).slice(2, 6)}`,
             sender: data.sender,
+            senderName: typeof data.payload?.name === 'string' ? (data.payload.name as string) : undefined,
             text: String(data.payload?.text || ''),
             ts: data.ts || Date.now()
           };
@@ -465,7 +466,8 @@ export default function WatchPartyPanel() {
         </div>
       )}
 
-      {/* 成员与聊天 */}
+      {/* 成员与聊天（仅已加入房间显示）*/}
+      {connected && (
       <LiquidGlassContainer className='px-3 py-2' roundedClass='rounded-2xl' intensity='medium' shadow='lg' border='subtle'>
         <div className='flex items-center justify-between mb-2'>
           <div className='flex items-center gap-2'>
@@ -504,10 +506,18 @@ export default function WatchPartyPanel() {
               {messages.length === 0 && <div className='text-xs text-gray-500 dark:text-gray-400'>暂无消息</div>}
               {messages.map((msg) => {
                 const self = msg.sender === selfIdRef.current;
+                const displayName = self ? (name || '我') : (msg.senderName || '未知用户');
                 return (
                   <div key={msg.id} className={`flex ${self ? 'justify-end' : 'justify-start'} mb-1`}>
-                    <div className={`max-w-[75%] px-2 py-1 rounded-2xl text-xs ${self ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100'}`}>
-                      {msg.text}
+                    <div className={`max-w-[75%]`}> 
+                      {!self && (
+                        <div className='text-[10px] text-gray-600 dark:text-gray-400 mb-[2px]'>
+                          {displayName}
+                        </div>
+                      )}
+                      <div className={`px-2 py-1 rounded-2xl text-xs ${self ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100'}`}>
+                        {msg.text}
+                      </div>
                     </div>
                   </div>
                 );
@@ -521,6 +531,7 @@ export default function WatchPartyPanel() {
           </>
         )}
       </LiquidGlassContainer>
+      )}
     </div>
   );
 }
