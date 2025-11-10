@@ -2,9 +2,10 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, Info, Play } from 'lucide-react';
-import LiquidGlassContainer from '@/components/LiquidGlassContainer';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+
+import LiquidGlassContainer from '@/components/LiquidGlassContainer';
 
 interface BannerItem {
   id: string | number;
@@ -26,6 +27,7 @@ interface HeroBannerProps {
   autoPlayInterval?: number; // 自动播放间隔（毫秒）
   showControls?: boolean;
   showIndicators?: boolean;
+  onRecommend?: (title?: string) => void;
 }
 
 export default function HeroBanner({
@@ -33,6 +35,7 @@ export default function HeroBanner({
   autoPlayInterval = 5000,
   showControls = true,
   showIndicators = true,
+  onRecommend,
 }: HeroBannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -338,6 +341,14 @@ export default function HeroBanner({
               >
                 跳转列表
               </Link>
+              {onRecommend && (
+                <button
+                  onClick={() => { onRecommend(currentItem.title); setShowMore(false); }}
+                  className='text-xs px-3 py-1 rounded-full bg-purple-600 text-white hover:bg-purple-700'
+                >
+                  打开AI推荐
+                </button>
+              )}
               <Link
                 href={`/search?q=${encodeURIComponent(currentItem.title)}`}
                 className='text-xs px-3 py-1 rounded-full bg-pink-600 text-white hover:bg-pink-700'

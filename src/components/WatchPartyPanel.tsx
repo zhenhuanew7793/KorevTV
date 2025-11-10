@@ -1,10 +1,13 @@
 "use client";
 
+import { ChevronDown, ChevronUp, Copy as CopyIcon, Crown, Plus,QrCode, Users, Wifi } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
-import LiquidGlassContainer from './LiquidGlassContainer';
+
 import MobileActionSheet from '@/components/MobileActionSheet';
-import { Users, Copy as CopyIcon, Crown, Wifi, ChevronDown, ChevronUp, QrCode, Plus } from 'lucide-react';
+
+import LiquidGlassContainer from './LiquidGlassContainer';
 
 type ChatMsg = { id: string; sender?: string; text: string; ts: number };
 

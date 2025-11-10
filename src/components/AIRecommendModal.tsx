@@ -2,26 +2,23 @@
 
 'use client';
 
-import { Brain, Send, Sparkles, X, Play, ExternalLink } from 'lucide-react';
+import { Brain, ExternalLink,Play, Send, Sparkles, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import {
-  addMovieTitleClickListeners,
   AI_RECOMMEND_PRESETS,
   AIMessage,
   cleanMovieTitle,
   formatAIResponseWithLinks,
-  generateChatSummary,
   generateSearchUrl,
-  sendAIRecommendMessage,
   MovieRecommendation,
+  sendAIRecommendMessage,
 } from '@/lib/ai-recommend.client';
 
 interface AIRecommendModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialMessage?: string; // 可选：打开时预填的输入内容
 }
 
 interface ExtendedAIMessage extends AIMessage {
@@ -31,7 +28,7 @@ interface ExtendedAIMessage extends AIMessage {
   type?: string;
 }
 
-export default function AIRecommendModal({ isOpen, onClose, initialMessage }: AIRecommendModalProps) {
+export default function AIRecommendModal({ isOpen, onClose }: AIRecommendModalProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<ExtendedAIMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -631,9 +628,3 @@ export default function AIRecommendModal({ isOpen, onClose, initialMessage }: AI
     </div>
   );
 }
-  // 当弹窗打开且存在初始消息时，预填输入框
-  useEffect(() => {
-    if (isOpen && initialMessage && initialMessage.trim()) {
-      setInputMessage(initialMessage.trim());
-    }
-  }, [isOpen, initialMessage]);
