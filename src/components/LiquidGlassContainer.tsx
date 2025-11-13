@@ -7,9 +7,10 @@ interface LiquidGlassContainerProps {
   children: ReactNode;
   className?: string;
   roundedClass?: string; // Tailwind rounded class, e.g. 'rounded-2xl' or 'rounded-[28px]' or 'rounded-full'
-  intensity?: 'low' | 'medium' | 'high';
+  intensity?: 'low' | 'medium' | 'high' | 'strong';
   border?: 'subtle' | 'normal';
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  animated?: boolean; // 是否启用液态玻璃动效
 }
 
 export default function LiquidGlassContainer({
@@ -19,9 +20,12 @@ export default function LiquidGlassContainer({
   intensity = 'medium',
   border = 'subtle',
   shadow = 'lg',
+  animated = true,
 }: LiquidGlassContainerProps) {
   const intensityClasses =
-    intensity === 'high'
+    intensity === 'strong'
+      ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-3xl'
+      : intensity === 'high'
       ? 'bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl'
       : intensity === 'low'
       ? 'bg-white/30 dark:bg-gray-900/30 backdrop-blur-sm'
@@ -42,6 +46,7 @@ export default function LiquidGlassContainer({
   };
 
   const classes = clsx(
+    'relative overflow-hidden',
     roundedClass,
     intensityClasses,
     borderClasses,
@@ -49,5 +54,24 @@ export default function LiquidGlassContainer({
     className,
   );
 
-  return <div className={classes}>{children}</div>;
+  const overlayIntensityClass =
+    intensity === 'strong'
+      ? 'lgx-overlay--strong'
+      : intensity === 'high'
+      ? 'lgx-overlay--high'
+      : intensity === 'low'
+      ? 'lgx-overlay--low'
+      : 'lgx-overlay--medium';
+
+  return (
+    <div className={classes}>
+      {animated && (
+        <>
+          <span aria-hidden className={clsx('lgx-overlay', overlayIntensityClass)} />
+          <span aria-hidden className={clsx('lgx-shimmer', overlayIntensityClass)} />
+        </>
+      )}
+      {children}
+    </div>
+  );
 }

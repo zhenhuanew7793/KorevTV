@@ -146,10 +146,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
     };
   }, [loading, playRecords.length]); // 依赖播放记录加载状态
 
-  // 如果没有播放记录，则不渲染组件
-  if (!loading && playRecords.length === 0) {
-    return null;
-  }
+  // 注意：不要在声明 hooks 前提前 return，否则会导致 hooks 数量不一致报错
 
   // 计算播放进度百分比
   const getProgress = (record: PlayRecord) => {
@@ -209,6 +206,11 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
       return b.save_time - a.save_time;
     });
   }, [filteredRecords, sortBy, favoriteKeys]);
+
+  // 将提前 return 放到所有 hooks 之后，保持每次渲染调用的 hooks 数量一致
+  if (!loading && playRecords.length === 0) {
+    return null;
+  }
 
   // 注意：parseKey 与 getNewEpisodesCount 已提前声明，供后续使用
 

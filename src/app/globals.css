@@ -55,6 +55,107 @@
   }
 }
 
+/* Liquid Glass 动效 */
+.lgx-overlay,
+.lgx-shimmer {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+}
+
+.lgx-overlay {
+  background: radial-gradient(
+      50% 60% at 20% 20%,
+      rgba(255, 255, 255, 0.65) 0%,
+      rgba(255, 255, 255, 0) 60%
+    ),
+    radial-gradient(
+      45% 55% at 80% 60%,
+      rgba(255, 255, 255, 0.35) 0%,
+      rgba(255, 255, 255, 0) 65%
+    );
+  filter: blur(12px);
+  mix-blend-mode: soft-light;
+  animation: lgx-flow 18s ease-in-out infinite alternate;
+}
+
+html.dark .lgx-overlay {
+  mix-blend-mode: overlay;
+}
+
+.lgx-shimmer {
+  inset: 0; /* 闪光覆盖整个容器 */
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.28) 12%,
+    rgba(255, 255, 255, 0) 24%
+  );
+  transform: translateX(-50%);
+  animation: lgx-shimmer 6s ease-in-out infinite;
+  opacity: 0.35;
+}
+
+/* 强度映射 */
+.lgx-overlay--low {
+  opacity: 0.3;
+  filter: blur(10px);
+  animation-duration: 24s;
+}
+.lgx-overlay--medium {
+  opacity: 0.45;
+}
+.lgx-overlay--high {
+  opacity: 0.65;
+  animation-duration: 16s;
+}
+.lgx-overlay--strong {
+  opacity: 0.8;
+  animation-duration: 12s;
+}
+
+/* shimmer 强度跟随 overlay 类 */
+.lgx-shimmer.lgx-overlay--low {
+  opacity: 0.2;
+  animation-duration: 8s;
+}
+.lgx-shimmer.lgx-overlay--medium {
+  opacity: 0.3;
+  animation-duration: 6.5s;
+}
+.lgx-shimmer.lgx-overlay--high {
+  opacity: 0.35;
+  animation-duration: 5.5s;
+}
+.lgx-shimmer.lgx-overlay--strong {
+  opacity: 0.4;
+  animation-duration: 4.8s;
+}
+
+@keyframes lgx-flow {
+  0% {
+    transform: translate3d(-8%, -6%, 0) rotate(0.4deg);
+  }
+  50% {
+    transform: translate3d(6%, 8%, 0) rotate(-0.5deg);
+  }
+  100% {
+    transform: translate3d(-5%, 4%, 0) rotate(0.4deg);
+  }
+}
+
+@keyframes lgx-shimmer {
+  0% {
+    transform: translateX(-55%);
+  }
+  50% {
+    transform: translateX(55%);
+  }
+  100% {
+    transform: translateX(-55%);
+  }
+}
+
 :root {
   --foreground-rgb: 255, 255, 255;
 }

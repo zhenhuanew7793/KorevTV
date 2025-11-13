@@ -6,6 +6,7 @@ import { Cat, Clover, Film, Globe, Home, PlaySquare, Radio, Star, Tv } from 'luc
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import LiquidGlassContainer from './LiquidGlassContainer';
 
 interface MobileBottomNavProps {
   /**
@@ -90,50 +91,66 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
   return (
     <nav
-      className='md:hidden fixed left-0 right-0 z-[600] bg-white/90 backdrop-blur-xl border-t border-gray-200/50 overflow-hidden dark:bg-gray-900/80 dark:border-gray-700/50'
+      className='md:hidden fixed bottom-0 left-0 right-0 z-[600]'
       style={{
-        /* 紧贴视口底部，同时在内部留出安全区高度 */
-        bottom: 0,
         paddingBottom: 'env(safe-area-inset-bottom)',
-        minHeight: 'calc(3.5rem + env(safe-area-inset-bottom))',
       }}
+      aria-label='底部导航'
     >
-      <ul className='flex items-center overflow-x-auto scrollbar-hide'>
-        {navItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <li
-              key={item.href}
-              className='flex-shrink-0'
-              style={{ 
-                width: `${100 / navItems.length}vw`, 
-                minWidth: `${100 / navItems.length}vw` 
-              }}
-            >
-              <Link
-                href={item.href}
-                className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs'
-              >
-                <item.icon
-                  className={`h-6 w-6 ${active
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-gray-500 dark:text-gray-400'
-                    }`}
-                />
-                <span
-                  className={
-                    active
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-gray-600 dark:text-gray-300'
-                  }
+      <LiquidGlassContainer
+        className='mx-2 mb-2 overflow-hidden'
+        roundedClass='rounded-[26px]'
+        intensity='high'
+        shadow='2xl'
+        border='subtle'
+        animated
+      >
+        {/* 顶部渐变强调线 */}
+        <div className='h-[2px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent'></div>
+
+        <ul className='flex items-center justify-around px-2 py-2 h-16'>
+          {navItems.map((item) => {
+            const active = isActive(item.href);
+            const Icon = item.icon;
+            return (
+              <li key={item.href} className='flex-shrink-0 min-w-[52px]'>
+                <Link
+                  href={item.href}
+                  className='relative flex flex-col items-center justify-center gap-0.5 transition-all duration-300 active:scale-95'
+                  aria-current={active ? 'page' : undefined}
                 >
-                  {item.label}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+                  {/* 激活背景胶囊 */}
+                  <div className='relative'>
+                    {active && (
+                      <div className='absolute -inset-2 rounded-2xl bg-emerald-500/10 blur-[2px]'></div>
+                    )}
+
+                    {/* 图标容器 */}
+                    <div className={`relative flex items-center justify-center w-10 h-7 rounded-2xl transition-all duration-300 ${active ? 'bg-gradient-to-br from-gray-100/80 to-gray-200/60 dark:from-gray-800/80 dark:to-gray-700/60 shadow-lg' : 'bg-transparent'}`}>
+                      <Icon
+                        className={`w-5 h-5 ${active ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-600 dark:text-gray-400'} transition-all duration-300`}
+                        strokeWidth={active ? 2.5 : 2}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 标签，仅激活时显示 */}
+                  {active && (
+                    <span className='text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 transition-all duration-300'>
+                      {item.label}
+                    </span>
+                  )}
+
+                  {/* 激活指示点 */}
+                  {active && (
+                    <span className='absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-500 shadow-sm'></span>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </LiquidGlassContainer>
     </nav>
   );
 };

@@ -139,9 +139,10 @@ export default function ModernNav() {
         <LiquidGlassContainer
           className='px-3 py-2 overflow-hidden'
           roundedClass='rounded-[28px]'
-          intensity='high'
+          intensity='strong'
           shadow='2xl'
           border='subtle'
+          animated
         >
           <div className='flex items-center justify-center gap-2'>
             {menuItems.slice(0, 9).map((item) => {
@@ -152,14 +153,14 @@ export default function ModernNav() {
                   key={item.label}
                   href={item.href}
                   onClick={() => setActive(item.href)}
-                  className='group relative flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 whitespace-nowrap'
+                  className='group relative flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 whitespace-nowrap active:scale-[0.98]'
                 >
                   {/* Icon */}
                   <div className='relative'>
                     <Icon
                       className={`w-5 h-5 transition-all duration-300 ${
                         active ? item.color : 'text-gray-600 dark:text-gray-400'
-                      } ${active ? 'scale-110' : 'group-hover:scale-110'}`}
+                      } ${active ? 'scale-110' : 'group-hover:scale-110'} drop-shadow-sm`}
                     />
                   </div>
                   {/* Label */}
@@ -172,6 +173,10 @@ export default function ModernNav() {
                   >
                     {item.label}
                   </span>
+                  {/* Active indicator dot */}
+                  {active && (
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gradient-to-r ${item.gradient} shadow`} />
+                  )}
                 </Link>
               );
             })}
@@ -187,6 +192,7 @@ export default function ModernNav() {
       intensity='high'
       shadow='xl'
       border='subtle'
+      animated
     >
       <span className='text-base sm:text-lg font-semibold tracking-wide bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 dark:from-green-400 dark:via-emerald-300 dark:to-teal-300 bg-clip-text text-transparent'>
         {siteName}
