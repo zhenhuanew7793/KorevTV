@@ -944,10 +944,15 @@ function PlayPageClient() {
     allResults.forEach((result, index) => {
       const source = sources[index];
       const sourceKey = `${source.source}-${source.id}`;
-
       if (result) {
-        // 成功的结果
         newVideoInfoMap.set(sourceKey, result.testResult);
+      } else {
+        newVideoInfoMap.set(sourceKey, {
+          quality: '错误',
+          loadSpeed: '未知',
+          pingTime: 0,
+          hasError: true,
+        });
       }
     });
 
@@ -1029,6 +1034,32 @@ function PlayPageClient() {
     maxPing: number
   ): number => {
     let score = 0;
+    let wq = 0.4;
+    let ws = 0.4;
+    let wp = 0.2;
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    const mobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const speedStr = testResult.loadSpeed;
+    let speedKBps = 0;
+    if (speedStr !== '未知' && speedStr !== '测量中...') {
+      const m = speedStr.match(/^([\d.]+)\s*(KB\/s|MB\/s)$/);
+      if (m) {
+        const v = parseFloat(m[1]);
+        const u = m[2];
+        speedKBps = u === 'MB/s' ? v * 1024 : v;
+      }
+    }
+    if (mobile) {
+      wq = 0.35;
+      ws = 0.35;
+      wp = 0.3;
+    }
+    if (speedKBps < 512 || testResult.pingTime > 300) {
+      wp = Math.max(wp, 0.3);
+      ws = Math.min(ws, mobile ? 0.35 : 0.4);
+      wq = Math.min(wq, mobile ? 0.35 : 0.4);
+    }
 
     // 分辨率评分 (40% 权重)
     const qualityScore = (() => {
@@ -1049,26 +1080,19 @@ function PlayPageClient() {
           return 0;
       }
     })();
-    score += qualityScore * 0.4;
+    score += qualityScore * wq;
 
     // 下载速度评分 (40% 权重) - 基于最大速度线性映射
     const speedScore = (() => {
-      const speedStr = testResult.loadSpeed;
-      if (speedStr === '未知' || speedStr === '测量中...') return 30;
-
-      // 解析速度值
       const match = speedStr.match(/^([\d.]+)\s*(KB\/s|MB\/s)$/);
       if (!match) return 30;
-
       const value = parseFloat(match[1]);
       const unit = match[2];
-      const speedKBps = unit === 'MB/s' ? value * 1024 : value;
-
-      // 基于最大速度线性映射，最高100分
-      const speedRatio = speedKBps / maxSpeed;
+      const vkb = unit === 'MB/s' ? value * 1024 : value;
+      const speedRatio = vkb / maxSpeed;
       return Math.min(100, Math.max(0, speedRatio * 100));
     })();
-    score += speedScore * 0.4;
+    score += speedScore * ws;
 
     // 网络延迟评分 (20% 权重) - 基于延迟范围线性映射
     const pingScore = (() => {
@@ -1082,7 +1106,7 @@ function PlayPageClient() {
       const pingRatio = (maxPing - ping) / (maxPing - minPing);
       return Math.min(100, Math.max(0, pingRatio * 100));
     })();
-    score += pingScore * 0.2;
+    score += pingScore * wp;
 
     return Math.round(score * 100) / 100; // 保留两位小数
   };
@@ -4478,10 +4502,18 @@ function PlayPageClient() {
 
   // 指标采集轮询：缓冲、带宽估计、丢帧
   useEffect(() => {
-    // 清理旧的定时器
     if (metricsIntervalRef.current) {
       clearInterval(metricsIntervalRef.current);
       metricsIntervalRef.current = null;
+    }
+
+    if (!showMetricsPanel) {
+      return () => {
+        if (metricsIntervalRef.current) {
+          clearInterval(metricsIntervalRef.current);
+          metricsIntervalRef.current = null;
+        }
+      };
     }
 
     metricsIntervalRef.current = setInterval(() => {
@@ -4536,7 +4568,7 @@ function PlayPageClient() {
         metricsIntervalRef.current = null;
       }
     };
-  }, [videoUrl]);
+  }, [videoUrl, showMetricsPanel]);
 
   // 当组件卸载时清理定时器、Wake Lock 和播放器资源
   useEffect(() => {
