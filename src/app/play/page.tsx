@@ -75,6 +75,7 @@ function PlayPageClient() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   // 快捷键提示开关
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
+  const [showFullDesc, setShowFullDesc] = useState(false);
 
   // bangumi详情状态
   const [bangumiDetails, setBangumiDetails] = useState<any>(null);
@@ -5197,7 +5198,7 @@ function PlayPageClient() {
         <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
           {/* 文字区 */}
           <div className='md:col-span-3'>
-            <div className='p-6 flex flex-col min-h-0'>
+            <div className='p-6 flex flex-col min-h-0 rounded-2xl border border-white/20 dark:border-gray-700/50 bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-[0_12px_36px_0_rgba(0,0,0,0.15)]'>
               {/* 标题 */}
               <div className='mb-4 flex-shrink-0'>
                 <div className='flex flex-col md:flex-row md:items-center gap-3'>
@@ -5390,7 +5391,7 @@ function PlayPageClient() {
                         )}
 
                         {/* 标签信息 */}
-                        <div className='flex flex-wrap gap-2 mt-3'>
+                        <div className='flex flex-wrap gap-2 mt-3 chips-unify'>
                           {bangumiDetails.tags &&
                             bangumiDetails.tags
                               .slice(0, 4)
@@ -5505,7 +5506,7 @@ function PlayPageClient() {
                         )}
 
                         {/* 标签信息 */}
-                        <div className='flex flex-wrap gap-2 mt-3'>
+                        <div className='flex flex-wrap gap-2 mt-3 chips-unify'>
                           {movieDetails.countries &&
                             movieDetails.countries
                               .slice(0, 2)
@@ -5566,7 +5567,7 @@ function PlayPageClient() {
                   <div className='space-y-2 text-sm'>
                     {/* 集数信息 */}
                     {detail?.episodes && detail.episodes.length > 0 && (
-                      <div className='flex flex-wrap gap-2'>
+                      <div className='flex flex-wrap gap-2 chips-unify'>
                         <span className='relative group bg-gradient-to-r from-blue-500/90 to-indigo-500/90 dark:from-blue-600/90 dark:to-indigo-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-105'>
                           <span className='absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300'></span>
                           <span className='relative'>
@@ -5589,11 +5590,23 @@ function PlayPageClient() {
 
               {/* 剧情简介 */}
               {(detail?.desc || bangumiDetails?.summary) && (
-                <div
-                  className='mt-0 text-base leading-relaxed opacity-90 overflow-y-auto pr-2 flex-1 min-h-0 scrollbar-hide'
-                  style={{ whiteSpace: 'pre-line' }}
-                >
-                  {bangumiDetails?.summary || detail?.desc}
+                <div className='mt-0 text-base leading-relaxed opacity-90 flex-1 min-h-0'>
+                  <div
+                    className={`${
+                      showFullDesc ? '' : 'max-h-40 overflow-hidden'
+                    } pr-2`}
+                    style={{ whiteSpace: 'pre-line' }}
+                  >
+                    {bangumiDetails?.summary || detail?.desc}
+                  </div>
+                  <div className='mt-2'>
+                    <button
+                      onClick={() => setShowFullDesc((v) => !v)}
+                      className='px-3 py-1 rounded-full text-xs border border-white/30 bg-black/10 text-gray-800 dark:bg-white/10 dark:text-gray-200 backdrop-blur-sm'
+                    >
+                      {showFullDesc ? '收起' : '展开'}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -5721,6 +5734,27 @@ function PlayPageClient() {
       </div>
 
       {/* 返回顶部悬浮按钮 */}
+      <style jsx>{`
+        .chips-unify span {
+          background: rgba(0, 0, 0, 0.08);
+          color: #1f2937;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 9999px;
+          padding: 4px 10px;
+          font-size: 12px;
+          display: inline-flex;
+          align-items: center;
+          backdrop-filter: saturate(180%) blur(10px);
+        }
+        :global(html.dark) .chips-unify span {
+          background: rgba(255, 255, 255, 0.08);
+          color: #e5e7eb;
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+        .chips-unify span:hover {
+          filter: brightness(1.05);
+        }
+      `}</style>
       <button
         onClick={scrollToTop}
         className={`fixed z-[500] w-12 h-12 rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group relative overflow-hidden ${
