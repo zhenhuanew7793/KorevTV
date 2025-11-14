@@ -395,6 +395,43 @@ function PlayPageClient() {
 
   // 播放指标与质量控制相关状态
   const [showMetricsPanel, setShowMetricsPanel] = useState(false);
+  const [prefetchNextEnabled, setPrefetchNextEnabled] = useState<boolean>(
+    () => {
+      if (typeof window !== 'undefined') {
+        const v = localStorage.getItem('enablePrefetchNext');
+        if (v !== null) return v === 'true';
+      }
+      return true;
+    }
+  );
+  const [scoreWeights, setScoreWeights] = useState<{
+    q: number;
+    s: number;
+    p: number;
+  }>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('scoreWeights');
+      if (saved) {
+        try {
+          const obj = JSON.parse(saved);
+          if (
+            typeof obj?.q === 'number' &&
+            typeof obj?.s === 'number' &&
+            typeof obj?.p === 'number'
+          ) {
+            return obj;
+          }
+        } catch (_) {
+          /* noop */
+        }
+      }
+    }
+    return { q: 0.4, s: 0.4, p: 0.2 };
+  });
+  const scoreWeightsRef = useRef(scoreWeights);
+  useEffect(() => {
+    scoreWeightsRef.current = scoreWeights;
+  }, [scoreWeights]);
   const [availableLevels, setAvailableLevels] = useState<
     Array<{ index: number; height?: number; bitrate?: number }>
   >([]);
@@ -1035,9 +1072,9 @@ function PlayPageClient() {
     maxPing: number
   ): number => {
     let score = 0;
-    let wq = 0.4;
-    let ws = 0.4;
-    let wp = 0.2;
+    let wq = scoreWeightsRef.current.q;
+    let ws = scoreWeightsRef.current.s;
+    let wp = scoreWeightsRef.current.p;
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
     const mobile =
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
@@ -1052,14 +1089,20 @@ function PlayPageClient() {
       }
     }
     if (mobile) {
-      wq = 0.35;
-      ws = 0.35;
-      wp = 0.3;
+      const factor = 0.05;
+      wp = Math.min(0.6, wp + factor);
+      const rest = 1 - wp;
+      const totalQS = wq + ws || 1;
+      wq = (wq / totalQS) * rest;
+      ws = (ws / totalQS) * rest;
     }
     if (speedKBps < 512 || testResult.pingTime > 300) {
-      wp = Math.max(wp, 0.3);
-      ws = Math.min(ws, mobile ? 0.35 : 0.4);
-      wq = Math.min(wq, mobile ? 0.35 : 0.4);
+      const factor = 0.05;
+      wp = Math.min(0.6, wp + factor);
+      const rest = 1 - wp;
+      const totalQS = wq + ws || 1;
+      wq = (wq / totalQS) * rest;
+      ws = (ws / totalQS) * rest;
     }
 
     // 分辨率评分 (40% 权重)
@@ -1187,6 +1230,15 @@ function PlayPageClient() {
       video.removeAttribute('disableRemotePlayback');
     }
   };
+  useEffect(() => {
+    if (!prefetchNextEnabled) return;
+    const d = detailRef.current;
+    const idx = currentEpisodeIndexRef.current;
+    if (!d || !d.episodes || idx + 1 >= d.episodes.length) return;
+    const nextUrl = d.episodes[idx + 1] || '';
+    if (!nextUrl) return;
+    fetch(nextUrl, { method: 'GET', cache: 'no-cache' }).catch(() => undefined);
+  }, [videoUrl, prefetchNextEnabled]);
 
   // 检测移动设备（在组件层级定义）- 参考ArtPlayer compatibility.js
   const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
@@ -5044,6 +5096,112 @@ function PlayPageClient() {
                         ))}
                       </select>
                     </div>
+                    <div className='mt-3'>
+                      <label className='block text-xs mb-1 opacity-80'>
+                        选源评分权重
+                      </label>
+                      <div className='space-y-2 text-xs'>
+                        <div className='flex items-center gap-2'>
+                          <span className='w-12 opacity-80'>分辨率</span>
+                          <input
+                            type='range'
+                            min={0}
+                            max={100}
+                            value={Math.round(scoreWeights.q * 100)}
+                            onChange={(e) => {
+                              const q = Number(e.target.value) / 100;
+                              const rest = 1 - q;
+                              const ratioS =
+                                scoreWeights.s /
+                                (scoreWeights.s + scoreWeights.p || 1);
+                              const s = rest * ratioS;
+                              const p = rest - s;
+                              const next = { q, s, p };
+                              setScoreWeights(next);
+                              localStorage.setItem(
+                                'scoreWeights',
+                                JSON.stringify(next)
+                              );
+                            }}
+                            className='flex-1'
+                          />
+                          <span>{Math.round(scoreWeights.q * 100)}%</span>
+                        </div>
+                        <div className='flex items-center gap-2'>
+                          <span className='w-12 opacity-80'>速度</span>
+                          <input
+                            type='range'
+                            min={0}
+                            max={100}
+                            value={Math.round(scoreWeights.s * 100)}
+                            onChange={(e) => {
+                              const s = Number(e.target.value) / 100;
+                              const rest = 1 - s;
+                              const ratioQ =
+                                scoreWeights.q /
+                                (scoreWeights.q + scoreWeights.p || 1);
+                              const q = rest * ratioQ;
+                              const p = rest - q;
+                              const next = { q, s, p };
+                              setScoreWeights(next);
+                              localStorage.setItem(
+                                'scoreWeights',
+                                JSON.stringify(next)
+                              );
+                            }}
+                            className='flex-1'
+                          />
+                          <span>{Math.round(scoreWeights.s * 100)}%</span>
+                        </div>
+                        <div className='flex items-center gap-2'>
+                          <span className='w-12 opacity-80'>延迟</span>
+                          <input
+                            type='range'
+                            min={0}
+                            max={100}
+                            value={Math.round(scoreWeights.p * 100)}
+                            onChange={(e) => {
+                              const p = Number(e.target.value) / 100;
+                              const rest = 1 - p;
+                              const ratioQ =
+                                scoreWeights.q /
+                                (scoreWeights.q + scoreWeights.s || 1);
+                              const q = rest * ratioQ;
+                              const s = rest - q;
+                              const next = { q, s, p };
+                              setScoreWeights(next);
+                              localStorage.setItem(
+                                'scoreWeights',
+                                JSON.stringify(next)
+                              );
+                            }}
+                            className='flex-1'
+                          />
+                          <span>{Math.round(scoreWeights.p * 100)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className='mt-3'>
+                      <label className='inline-flex items-center gap-2 text-xs'>
+                        <input
+                          type='checkbox'
+                          checked={prefetchNextEnabled}
+                          onChange={(e) => {
+                            const val = e.target.checked;
+                            setPrefetchNextEnabled(val);
+                            try {
+                              localStorage.setItem(
+                                'enablePrefetchNext',
+                                String(val)
+                              );
+                            } catch (_) {
+                              void 0;
+                            }
+                          }}
+                        />
+                        预取下一集
+                      </label>
+                    </div>
                   </div>
                 )}
 
@@ -5320,7 +5478,7 @@ function PlayPageClient() {
                                             bangumiDetails.rating.score
                                           ) / 2
                                         )
-                                          ? 'text-pink-500 drop-shadow-[0_0_4px_rgba(236,72,153,0.5)] group-hover:scale-110'
+                                          ? 'text-yellow-500 group-hover:scale-110'
                                           : 'text-gray-300 dark:text-gray-600'
                                       }`}
                                       fill='currentColor'
@@ -5439,7 +5597,7 @@ function PlayPageClient() {
                                         Math.floor(
                                           parseFloat(movieDetails.rate) / 2
                                         )
-                                          ? 'text-yellow-500 drop-shadow-[0_0_4px_rgba(234,179,8,0.5)] group-hover:scale-110'
+                                          ? 'text-yellow-500 group-hover:scale-110'
                                           : 'text-gray-300 dark:text-gray-600'
                                       }`}
                                       fill='currentColor'

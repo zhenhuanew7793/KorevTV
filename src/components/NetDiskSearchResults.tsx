@@ -132,6 +132,21 @@ export default function NetDiskSearchResults({
     }
   };
 
+  const parseHost = (url: string): string => {
+    try {
+      const u = new URL(url);
+      return u.host || '';
+    } catch (_) {
+      return '';
+    }
+  };
+
+  const parseSize = (note?: string): string => {
+    if (!note) return '-';
+    const m = note.match(/(\d+(?:\.\d+)?\s*(?:GB|MB|KB))/i);
+    return m ? m[1] : '-';
+  };
+
   // 筛选结果
   const filteredResults =
     results && filterMode === 'selected' && selectedFilter.length > 0
@@ -366,6 +381,35 @@ export default function NetDiskSearchResults({
                   <span className='absolute -top-1 -right-1 h-2 w-2 bg-orange-400 rounded-full animate-pulse'></span>
                 )}
               </button>
+              <div className='flex items-center gap-2'>
+                <label className='flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300'>
+                  <input
+                    type='checkbox'
+                    className='rounded'
+                    checked={onlyWithPassword}
+                    onChange={(e) => setOnlyWithPassword(e.target.checked)}
+                  />
+                  仅有密码
+                </label>
+                <label className='flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300'>
+                  <input
+                    type='checkbox'
+                    className='rounded'
+                    checked={recentOnly}
+                    onChange={(e) => setRecentOnly(e.target.checked)}
+                  />
+                  近7天
+                </label>
+                <label className='flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300'>
+                  <input
+                    type='checkbox'
+                    className='rounded'
+                    checked={withImagesOnly}
+                    onChange={(e) => setWithImagesOnly(e.target.checked)}
+                  />
+                  含图片
+                </label>
+              </div>
             </div>
           </div>
 
@@ -824,13 +868,20 @@ export default function NetDiskSearchResults({
                         {/* 元信息 */}
                         <div className='mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400'>
                           <span className='inline-flex items-center px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 border border-white/20'>
+                            {link.password ? '有密码' : '无密码'}
+                          </span>
+                          <span className='inline-flex items-center px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 border border-white/20'>
+                            平台: {cloudType.name}
+                          </span>
+                          <span className='inline-flex items-center px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 border border-white/20'>
+                            域名:{' '}
+                            {parseHost(link.url) || cloudType.domain || '-'}
+                          </span>
+                          <span className='inline-flex items-center px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 border border-white/20'>
                             来源: {link.source || '未知'}
                           </span>
                           <span className='inline-flex items-center px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 border border-white/20'>
-                            大小:{' '}
-                            {link.note?.match(
-                              /(\d+(?:\.\d+)?\s*(?:GB|MB|KB))/i
-                            )?.[1] || '-'}
+                            大小: {parseSize(link.note)}
                           </span>
                           <span className='inline-flex items-center px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 border border-white/20'>
                             更新时间:{' '}
