@@ -4973,21 +4973,37 @@ function PlayPageClient() {
                       {netSpeedMbps.toFixed(2)} Mbps
                     </span>
                   )}
-                  {/* 面板开关按钮 */}
-                  <button
-                    onClick={() => setShowMetricsPanel((v) => !v)}
-                    className='px-2 py-1 text-xs rounded-full bg-black/40 text-white border border-white/30 backdrop-blur-sm hover:bg-black/60 transition-colors'
-                    title='质量/指标'
+                  {/* 面板开关按钮（玻璃胶囊） */}
+                  <LiquidGlassContainer
+                    className='px-2 py-1 text-xs cursor-pointer inline-flex'
+                    roundedClass='rounded-full'
+                    intensity='medium'
+                    shadow='lg'
+                    border='subtle'
+                    animatedMode='hover'
+                    tint='blue'
                   >
-                    {showMetricsPanel ? '收起' : '质量'}
-                  </button>
+                    <button
+                      onClick={() => setShowMetricsPanel((v) => !v)}
+                      className='text-gray-800 dark:text-gray-200'
+                      title='质量/指标'
+                    >
+                      {showMetricsPanel ? '收起' : '质量'}
+                    </button>
+                  </LiquidGlassContainer>
                 </div>
 
                 {/* 质量与实时指标面板 */}
                 {showMetricsPanel && (
-                  <div
-                    className='absolute left-4 top-14 min-w-[240px] max-w-[320px] p-3 rounded-xl bg-black/50 text-white border border-white/30 backdrop-blur-md shadow-lg'
-                    style={{ zIndex: 2147483647 }}
+                  <LiquidGlassContainer
+                    className='absolute left-4 top-14 min-w-[240px] max-w-[320px] p-3'
+                    roundedClass='rounded-xl'
+                    intensity='high'
+                    shadow='xl'
+                    border='subtle'
+                    animatedMode='hover'
+                    tint='blue'
+                    style={{ zIndex: 2147483647 } as any}
                   >
                     <div className='mb-2 text-xs opacity-80'>
                       模式：{qualityMode === 'auto' ? '自动档' : '已锁定'}
@@ -5203,7 +5219,7 @@ function PlayPageClient() {
                         预取下一集
                       </label>
                     </div>
-                  </div>
+                  </LiquidGlassContainer>
                 )}
 
                 {/* 跳过设置按钮 - 播放器内右上角 */}
@@ -5211,13 +5227,10 @@ function PlayPageClient() {
                   <div className='absolute top-4 right-4 z-10 flex items-center gap-2'>
                     <button
                       onClick={() => setIsSkipSettingOpen(true)}
-                      className='group flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-xl rounded-xl border border-white/30 hover:border-white/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] hover:shadow-[0_8px_32px_0_rgba(255,255,255,0.18)] hover:scale-105 transition-all duration-300 ease-out'
+                      className='group flex items-center gap-2'
                       title='跳过设置'
-                      style={{
-                        backdropFilter: 'blur(20px) saturate(180%)',
-                        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                      }}
                     >
+                      <LiquidGlassContainer className='px-4 py-2' roundedClass='rounded-xl' intensity='high' shadow='xl' border='subtle' animatedMode='hover' tint='blue'>
                       <svg
                         className='w-5 h-5 text-white drop-shadow-lg group-hover:rotate-90 transition-all duration-300'
                         fill='none'
@@ -5234,20 +5247,14 @@ function PlayPageClient() {
                       <span className='text-sm font-medium text-white drop-shadow-lg transition-all duration-300 hidden sm:inline'>
                         跳过设置
                       </span>
+                      </LiquidGlassContainer>
                     </button>
                     <button
                       onClick={() => setTheaterMode((prev) => !prev)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border shadow-sm transition-all duration-300 ease-out ${
-                        theaterMode
-                          ? 'bg-emerald-500/80 text-white border-white/30 hover:bg-emerald-500'
-                          : 'bg-white/10 text-white border-white/30 hover:bg-white/20'
-                      }`}
+                      className={`flex items-center gap-2`}
                       title='影院模式'
-                      style={{
-                        backdropFilter: 'blur(20px) saturate(180%)',
-                        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                      }}
                     >
+                      <LiquidGlassContainer className='px-3 py-2' roundedClass='rounded-xl' intensity='high' shadow='xl' border='subtle' animatedMode='hover' tint='blue'>
                       <svg
                         className='w-5 h-5'
                         fill='none'
@@ -5262,6 +5269,7 @@ function PlayPageClient() {
                         />
                       </svg>
                       <span className='text-sm font-medium'>影院模式</span>
+                      </LiquidGlassContainer>
                     </button>
                   </div>
                 )}
