@@ -5350,7 +5350,17 @@ function PlayPageClient() {
 
         {/* 一起观看 - 播放器下方工具栏与面板 */}
         <div className='mt-4'>
-          <WatchPartyPanel />
+          <LiquidGlassContainer
+            className='px-4 py-3'
+            roundedClass='rounded-2xl'
+            intensity='high'
+            shadow='xl'
+            border='subtle'
+            animatedMode='hover'
+            tint='blue'
+          >
+            <WatchPartyPanel />
+          </LiquidGlassContainer>
         </div>
 
         {/* 详情展示 */}
