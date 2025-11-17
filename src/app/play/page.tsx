@@ -5766,7 +5766,7 @@ function PlayPageClient() {
                   <div className='mt-2 flex items-center gap-2'>
                     <button
                       onClick={() => setShowFullDesc((v) => !v)}
-                      className='px-3 py-1 rounded-full text-xs border border-white/30 bg-black/10 text-gray-800 dark:bg-white/10 dark:text-gray-200 backdrop-blur-sm'
+                      className='capsule-glow px-3 py-1 rounded-full text-xs border border-white/30 bg-black/10 text-gray-800 dark:bg-white/10 dark:text-gray-200 backdrop-blur-sm'
                       aria-label={showFullDesc ? '收起剧情简介' : '展开剧情简介'}
                     >
                       {showFullDesc ? '收起' : '展开'}
@@ -5776,7 +5776,7 @@ function PlayPageClient() {
                         href={bangumiDetails ? `https://bgm.tv/subject/${videoDoubanId}` : `https://movie.douban.com/subject/${videoDoubanId}`}
                         target='_blank'
                         rel='noopener noreferrer'
-                        className='px-2.5 py-1 rounded-full text-xs border border-white/30 bg-black/10 text-gray-800 dark:bg-white/10 dark:text-gray-200 backdrop-blur-sm'
+                        className='capsule-glow px-2.5 py-1 rounded-full text-xs border border-white/30 bg-black/10 text-gray-800 dark:bg-white/10 dark:text-gray-200 backdrop-blur-sm'
                         aria-label='打开来源页面'
                       >
                         {bangumiDetails ? 'Bangumi' : '豆瓣'}
@@ -5933,7 +5933,22 @@ function PlayPageClient() {
         .chips-unify span:hover {
           filter: brightness(1.06);
           transform: translateY(-1px) scale(1.03);
-          box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+          box-shadow: 0 6px 14px rgba(0,0,0,0.12), 0 0 16px rgba(255,255,255,0.18);
+        }
+        .capsule-glow { position: relative; }
+        .capsule-glow::after {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          border-radius: inherit;
+          pointer-events: none;
+          box-shadow: 0 0 0 rgba(0,0,0,0);
+          opacity: 0;
+          transition: opacity 180ms ease, box-shadow 180ms ease;
+        }
+        .capsule-glow:hover::after {
+          opacity: 1;
+          box-shadow: 0 0 18px rgba(99,102,241,0.28);
         }
       `}</style>
       <button
