@@ -141,9 +141,10 @@ function ScrollableRow({
         <div
           className='absolute inset-0 flex items-center justify-center'
           style={{
-            top: '0.5rem',
-            left: '0.5rem',
+            top: '50%',
+            left: '0.75rem',
             pointerEvents: 'auto',
+            transform: 'translateY(-50%)',
           }}
         >
             <button
@@ -178,9 +179,10 @@ function ScrollableRow({
         <div
           className='absolute inset-0 flex items-center justify-center'
           style={{
-            top: '0.5rem',
-            right: '0.5rem',
+            top: '50%',
+            right: '0.75rem',
             pointerEvents: 'auto',
+            transform: 'translateY(-50%)',
           }}
         >
             <button
