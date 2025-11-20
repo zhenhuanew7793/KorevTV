@@ -5358,16 +5358,25 @@ function PlayPageClient() {
 
         {/* 一起观看 - 播放器下方工具栏与面板 */}
         <div className='mt-4'>
-          <div className='px-4 py-3'>
+          <LiquidGlassContainer
+            className='px-4 py-3'
+            roundedClass='rounded-2xl'
+            intensity='high'
+            shadow='xl'
+            border='subtle'
+            animated={false}
+            animatedMode='hover'
+            tint='blue'
+          >
             <WatchPartyPanel />
-          </div>
+          </LiquidGlassContainer>
         </div>
 
         {/* 详情展示 */}
         <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
           {/* 文字区 */}
           <div className='md:col-span-3'>
-            <div className='p-6 flex flex-col min-h-0'>
+            <LiquidGlassContainer className='p-6 flex flex-col min-h-0' roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} animatedMode='hover' tint='blue'>
               {/* 标题 */}
               <div className='mb-4 flex-shrink-0'>
                 <div className='flex flex-col md:flex-row md:items-center gap-3'>
@@ -5473,7 +5482,7 @@ function PlayPageClient() {
                                 Bangumi评分:{' '}
                               </span>
                               <div className='flex items-center group relative overflow-hidden'>
-                                <span aria-hidden className='title-sweep rounded-md' />
+                                
                                 <span className='relative text-transparent bg-clip-text bg-gradient-to-r from-pink-600 via-rose-600 to-pink-600 dark:from-pink-400 dark:via-rose-400 dark:to-pink-400 font-bold text-lg transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_2px_8px_rgba(236,72,153,0.5)]'>
                                   {bangumiDetails.rating.score}
                                 </span>
@@ -5579,7 +5588,7 @@ function PlayPageClient() {
                                 豆瓣评分:{' '}
                               </span>
                               <div className='flex items-center group relative overflow-hidden'>
-                                <span aria-hidden className='title-sweep rounded-md' />
+                                
                                 <span className='relative text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 via-amber-600 to-yellow-600 dark:from-yellow-400 dark:via-amber-400 dark:to-yellow-400 font-bold text-lg transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_2px_8px_rgba(251,191,36,0.5)]'>
                                   {movieDetails.rate}
                                 </span>
@@ -5817,7 +5826,7 @@ function PlayPageClient() {
                   />
                 </LiquidGlassContainer>
               </div>
-            </div>
+            </LiquidGlassContainer>
           </div>
 
           {/* 封面展示 */}
