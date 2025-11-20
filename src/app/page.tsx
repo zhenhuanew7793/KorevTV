@@ -421,15 +421,15 @@ function HomeClient() {
           const releases = upcomingReleasesData.value.items;
           console.log('📅 获取到的即将上映数据:', releases.length, '条');
 
-          // 过滤出未来上映的作品（未来30天内）
+          // 过滤出未来上映的作品（未来90天内）
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          const thirtyDaysLater = new Date(today);
-          thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
+          const ninetyDaysLater = new Date(today);
+          ninetyDaysLater.setDate(ninetyDaysLater.getDate() + 90);
 
           const upcoming = releases.filter((item: ReleaseCalendarItem) => {
             const releaseDate = new Date(item.releaseDate);
-            const isUpcoming = releaseDate >= today && releaseDate <= thirtyDaysLater;
+            const isUpcoming = releaseDate >= today && releaseDate <= ninetyDaysLater;
             return isUpcoming;
           });
 
@@ -448,8 +448,43 @@ function HomeClient() {
             return acc;
           }, []);
 
-          console.log('📅 去重后的即将上映数据:', uniqueUpcoming.length, '条');
-          setUpcomingReleases(uniqueUpcoming.slice(0, 20)); // 首页显示更多：最多20个
+          // 时间分布算法：按周分桶，进行轮询选择，提升时间分布均衡性
+          const buckets = new Map<number, ReleaseCalendarItem[]>();
+          uniqueUpcoming.forEach(item => {
+            const d = new Date(item.releaseDate);
+            const msPerDay = 24 * 60 * 60 * 1000;
+            const diffDays = Math.floor((+d - +today) / msPerDay);
+            const weekIndex = Math.floor(diffDays / 7);
+            const list = buckets.get(weekIndex) || [];
+            list.push(item);
+            buckets.set(weekIndex, list);
+          });
+
+          // 每个桶内部按日期升序
+          for (const [, list] of buckets) {
+            list.sort((a, b) => +new Date(a.releaseDate) - +new Date(b.releaseDate));
+          }
+
+          const maxItems = 20;
+          const orderedWeeks = Array.from(buckets.keys()).sort((a, b) => a - b);
+          const picked: ReleaseCalendarItem[] = [];
+          let round = 0;
+          while (picked.length < maxItems) {
+            let didPick = false;
+            for (const w of orderedWeeks) {
+              const list = buckets.get(w)!;
+              if (round < list.length) {
+                picked.push(list[round]);
+                didPick = true;
+                if (picked.length >= maxItems) break;
+              }
+            }
+            if (!didPick) break; // 所有桶都耗尽
+            round++;
+          }
+
+          console.log('📅 去重后的即将上映数据(均衡采样):', picked.length, '条');
+          setUpcomingReleases(picked);
         } else {
           console.warn('获取即将上映数据失败:', upcomingReleasesData.status === 'rejected' ? upcomingReleasesData.reason : '数据格式错误');
           setUpcomingReleases([]);

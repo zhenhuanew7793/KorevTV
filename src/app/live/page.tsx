@@ -2003,8 +2003,11 @@ function LivePageClient() {
                                   )}
                                 </div>
                                 <div className='flex-1 min-w-0'>
-                                  <div className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate' title={channel.name}>
-                                    {channel.name}
+                                  <div className='text-sm font-medium text-gray-900 dark:text-gray-100 overflow-hidden' title={channel.name}>
+                                    <div className='marquee'>
+                                      <span className='marquee-item'>{channel.name}</span>
+                                      <span className='marquee-item' aria-hidden>{channel.name}</span>
+                                    </div>
                                   </div>
                                   <div className='text-xs text-gray-500 dark:text-gray-400 mt-1' title={channel.group}>
                                     {channel.group}
@@ -2091,16 +2094,16 @@ function LivePageClient() {
                                     )}
                                   </div>
                                   <div className='flex-1 min-w-0'>
-                                    <div 
-                                      className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate'
-                                      dangerouslySetInnerHTML={{ 
+                                    <div className='text-sm font-medium text-gray-900 dark:text-gray-100 overflow-hidden'>
+                                      <div className='marquee' dangerouslySetInnerHTML={{ 
                                         __html: searchQuery ? 
-                                          channel.name.replace(
+                                          `<span class="marquee-item">${channel.name.replace(
                                             new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'), 
                                             '<mark class="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded">$1</mark>'
-                                          ) : channel.name 
-                                      }}
-                                    />
+                                          )}</span><span class="marquee-item" aria-hidden>${channel.name}</span>` 
+                                          : `<span class="marquee-item">${channel.name}</span><span class="marquee-item" aria-hidden>${channel.name}</span>`
+                                      }} />
+                                    </div>
                                     <div className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
                                       {channel.group}
                                     </div>

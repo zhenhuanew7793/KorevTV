@@ -526,3 +526,24 @@ html.dark .lgx-tint-pink {
   50% { background-position: 120% 0; }
   100% { background-position: -120% 0; }
 }
+
+/* 滚动字幕（频道名） */
+.marquee {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 2rem;
+  will-change: transform;
+  animation: marquee-move 12s linear infinite;
+}
+.marquee-item {
+  display: inline-block;
+  white-space: nowrap;
+}
+@keyframes marquee-move {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee { animation: none; }
+}
