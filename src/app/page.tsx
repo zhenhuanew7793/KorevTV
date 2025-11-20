@@ -2,10 +2,11 @@
 
 'use client';
 
-import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Brain, Calendar, ChevronRight, Film, Play, Sparkles, Tv } from 'lucide-react';
 import Link from 'next/link';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 
+import { AI_RECOMMEND_PRESETS } from '@/lib/ai-recommend.client';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import {
   BangumiCalendarData,
@@ -20,16 +21,15 @@ import {
 } from '@/lib/db.client';
 import { getDoubanCategories, getDoubanDetails } from '@/lib/douban.client';
 import { getRecommendedShortDramas } from '@/lib/shortdrama.client';
-import { AI_RECOMMEND_PRESETS } from '@/lib/ai-recommend.client';
 import { cleanExpiredCache } from '@/lib/shortdrama-cache';
 import { ReleaseCalendarItem,ShortDramaItem } from '@/lib/types';
 import { DoubanItem } from '@/lib/types';
 
 import AIRecommendModal from '@/components/AIRecommendModal';
-import LiquidGlassContainer from '@/components/LiquidGlassContainer';
 import CapsuleSwitch from '@/components/CapsuleSwitch';
 import ContinueWatching from '@/components/ContinueWatching';
 import HeroBanner from '@/components/HeroBanner';
+import LiquidGlassContainer from '@/components/LiquidGlassContainer';
 import PageLayout from '@/components/PageLayout';
 import ScrollableRow from '@/components/ScrollableRow';
 import SectionTitle from '@/components/SectionTitle';
@@ -448,43 +448,22 @@ function HomeClient() {
             return acc;
           }, []);
 
-          // 时间分布算法：按周分桶，进行轮询选择，提升时间分布均衡性
-          const buckets = new Map<number, ReleaseCalendarItem[]>();
-          uniqueUpcoming.forEach(item => {
-            const d = new Date(item.releaseDate);
-            const msPerDay = 24 * 60 * 60 * 1000;
-            const diffDays = Math.floor((+d - +today) / msPerDay);
-            const weekIndex = Math.floor(diffDays / 7);
-            const list = buckets.get(weekIndex) || [];
-            list.push(item);
-            buckets.set(weekIndex, list);
-          });
-
-          // 每个桶内部按日期升序
-          for (const [, list] of buckets) {
-            list.sort((a, b) => +new Date(a.releaseDate) - +new Date(b.releaseDate));
-          }
-
+          // 优化展示分布：按日期排序后等距采样，覆盖更长时间范围
+          const sortedByDate = uniqueUpcoming.sort((a, b) => new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime());
           const maxItems = 20;
-          const orderedWeeks = Array.from(buckets.keys()).sort((a, b) => a - b);
-          const picked: ReleaseCalendarItem[] = [];
-          let round = 0;
-          while (picked.length < maxItems) {
-            let didPick = false;
-            for (const w of orderedWeeks) {
-              const list = buckets.get(w)!;
-              if (round < list.length) {
-                picked.push(list[round]);
-                didPick = true;
-                if (picked.length >= maxItems) break;
-              }
+          const n = sortedByDate.length;
+          const picks: ReleaseCalendarItem[] = [];
+          if (n <= maxItems) {
+            picks.push(...sortedByDate);
+          } else {
+            const step = n / maxItems;
+            for (let i = 0; i < maxItems; i++) {
+              const idx = Math.floor(i * step);
+              picks.push(sortedByDate[idx]);
             }
-            if (!didPick) break; // 所有桶都耗尽
-            round++;
           }
-
-          console.log('📅 去重后的即将上映数据(均衡采样):', picked.length, '条');
-          setUpcomingReleases(picked);
+          console.log('📅 分布优化后的即将上映数据:', picks.length, '条');
+          setUpcomingReleases(picks);
         } else {
           console.warn('获取即将上映数据失败:', upcomingReleasesData.status === 'rejected' ? upcomingReleasesData.reason : '数据格式错误');
           setUpcomingReleases([]);
@@ -1107,7 +1086,7 @@ function HomeClient() {
 
               {/* 热门短剧 */}
               <section className='mb-8'>
-                <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
+                <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animatedMode='hover' tint='blue'>
                 <div className='mb-4 flex items-center justify-between'>
                   <SectionTitle title="热门短剧" icon={Play} iconColor="text-orange-500" />
                   <Link
@@ -1296,7 +1275,7 @@ function HomeClient() {
           <span className='hidden sm:inline text-sm font-semibold'>AI 助手</span>
         </button>
       </div>
-      <style jsx>{``}</style>
+      <style jsx></style>
     </PageLayout>
   );
 }

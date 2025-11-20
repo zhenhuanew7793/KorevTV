@@ -1982,7 +1982,7 @@ function LivePageClient() {
                               data-channel-id={channel.id}
                               onClick={() => handleChannelChange(channel)}
                               disabled={isSwitchingSource}
-                              className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${isSwitchingSource
+                              className={`group w-full p-3 rounded-lg text-left transition-all duration-200 ${isSwitchingSource
                                 ? 'opacity-50 cursor-not-allowed'
                                 : isActive
                                   ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700'
@@ -2003,11 +2003,10 @@ function LivePageClient() {
                                   )}
                                 </div>
                                 <div className='flex-1 min-w-0'>
-                                  <div className='text-sm font-medium text-gray-900 dark:text-gray-100 overflow-hidden' title={channel.name}>
-                                    <div className='marquee'>
-                                      <span className='marquee-item'>{channel.name}</span>
-                                      <span className='marquee-item' aria-hidden>{channel.name}</span>
-                                    </div>
+                                  <div className='relative overflow-hidden whitespace-nowrap' title={channel.name}>
+                                    <span className='inline-block text-sm font-medium text-gray-900 dark:text-gray-100 marquee-item'>
+                                      {channel.name}
+                                    </span>
                                   </div>
                                   <div className='text-xs text-gray-500 dark:text-gray-400 mt-1' title={channel.group}>
                                     {channel.group}
@@ -2094,16 +2093,16 @@ function LivePageClient() {
                                     )}
                                   </div>
                                   <div className='flex-1 min-w-0'>
-                                    <div className='text-sm font-medium text-gray-900 dark:text-gray-100 overflow-hidden'>
-                                      <div className='marquee' dangerouslySetInnerHTML={{ 
+                                    <div 
+                                      className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate'
+                                      dangerouslySetInnerHTML={{ 
                                         __html: searchQuery ? 
-                                          `<span class="marquee-item">${channel.name.replace(
+                                          channel.name.replace(
                                             new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'), 
                                             '<mark class="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded">$1</mark>'
-                                          )}</span><span class="marquee-item" aria-hidden>${channel.name}</span>` 
-                                          : `<span class="marquee-item">${channel.name}</span><span class="marquee-item" aria-hidden>${channel.name}</span>`
-                                      }} />
-                                    </div>
+                                          ) : channel.name 
+                                      }}
+                                    />
                                     <div className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
                                       {channel.group}
                                     </div>
@@ -2263,8 +2262,12 @@ function LivePageClient() {
                   </div>
                   <div className='flex-1 min-w-0'>
                     <div className='flex items-center gap-3'>
-                      <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 truncate'>
-                        {currentChannel.name}
+                      <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100'>
+                        <span className='relative overflow-hidden whitespace-nowrap block'>
+                          <span className='inline-block marquee-item'>
+                            {currentChannel.name}
+                          </span>
+                        </span>
                       </h3>
                       <button
                         onClick={(e) => {
@@ -2295,6 +2298,16 @@ function LivePageClient() {
         )}
       </div>
     </PageLayout>
+    <style jsx>{`
+      .group:hover .marquee-item {
+        animation: marquee-left 6s linear infinite;
+      }
+      @keyframes marquee-left {
+        0% { transform: translateX(0); }
+        50% { transform: translateX(-50%); }
+        100% { transform: translateX(0); }
+      }
+    `}</style>
   );
 }
 
