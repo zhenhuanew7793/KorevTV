@@ -2,7 +2,7 @@
 
 'use client';
 
-import { CURRENT_VERSION } from "@/lib/version";
+import { CURRENT_VERSION } from '@/lib/version';
 
 // 版本检查结果枚举
 export enum UpdateStatus {
@@ -13,7 +13,10 @@ export enum UpdateStatus {
 
 // 远程版本检查URL配置
 const VERSION_CHECK_URLS = [
-  'https://raw.githubusercontent.com/SzeMeng76/LunaTV/refs/heads/main/VERSION.txt',
+  // 首选：从你的仓库获取 VERSION.txt（已要求使用你的仓库作为远程更新源）
+  'https://raw.githubusercontent.com/Korean032/KorevTV/main/VERSION.txt',
+  // 备用：历史上使用的仓库（保留以防首选失败）
+  'https://raw.githubusercontent.com/SzeMeng76/LunaTV/main/VERSION.txt',
 ];
 
 /**
