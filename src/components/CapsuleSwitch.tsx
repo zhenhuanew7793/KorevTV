@@ -21,6 +21,7 @@ const CapsuleSwitch: React.FC<CapsuleSwitchProps> = ({
     left: number;
     width: number;
   }>({ left: 0, width: 0 });
+  const [motionReduced, setMotionReduced] = useState(false);
 
   // 触摸滑动状态（仅用于移动端横向切换）
   const touchStartXRef = useRef<number | null>(null);
@@ -44,7 +45,6 @@ const CapsuleSwitch: React.FC<CapsuleSwitchProps> = ({
       if (button && container) {
         const buttonRect = button.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
-
         if (buttonRect.width > 0) {
           setIndicatorStyle({
             left: buttonRect.left - containerRect.left,
@@ -66,6 +66,36 @@ const CapsuleSwitch: React.FC<CapsuleSwitchProps> = ({
     const timeoutId = setTimeout(updateIndicatorPosition, 0);
     return () => clearTimeout(timeoutId);
   }, [activeIndex]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    let ro: ResizeObserver | null = null;
+    const handle = () => updateIndicatorPosition();
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(handle);
+      ro.observe(el);
+    }
+    const onResize = () => handle();
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      ro?.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function'
+    ) {
+      const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const handler = (e: MediaQueryListEvent) => setMotionReduced(e.matches);
+      setMotionReduced(mq.matches);
+      mq.addEventListener?.('change', handler);
+      return () => mq.removeEventListener?.('change', handler);
+    }
+  }, []);
 
   // 触摸事件处理：左右滑动切换激活项
   useEffect(() => {
@@ -127,15 +157,20 @@ const CapsuleSwitch: React.FC<CapsuleSwitchProps> = ({
         className || ''
       }`}
       style={{ touchAction: 'pan-x' }}
+      role='tablist'
     >
       {/* 滑动的渐变背景指示器 */}
       {indicatorStyle.width > 0 && (
         <div
-          className='absolute top-1 bottom-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 dark:from-blue-600 dark:via-purple-600 dark:to-pink-600 rounded-full shadow-xl transition-all duration-300 ease-out'
+          className={`absolute top-1 bottom-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 dark:from-blue-600 dark:via-purple-600 dark:to-pink-600 rounded-full shadow-xl ${
+            motionReduced ? '' : 'transition-all duration-300 ease-out'
+          } will-change-transform`}
           style={{
             left: `${indicatorStyle.left}px`,
             width: `${indicatorStyle.width}px`,
-            boxShadow: '0 0 20px rgba(147, 51, 234, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)',
+            boxShadow: motionReduced
+              ? '0 0 8px rgba(147, 51, 234, 0.28)'
+              : '0 0 20px rgba(147, 51, 234, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)',
           }}
         />
       )}
@@ -149,11 +184,33 @@ const CapsuleSwitch: React.FC<CapsuleSwitchProps> = ({
               buttonRefs.current[index] = el;
             }}
             onClick={() => onChange(opt.value)}
-            className={`relative z-10 w-16 px-3 py-1 text-xs sm:w-20 sm:py-2 sm:text-sm rounded-full font-bold transition-all duration-200 cursor-pointer ${
+            className={`relative z-10 w-16 px-3 py-1 text-xs sm:w-20 sm:py-2 sm:text-sm rounded-full font-bold ${
+              motionReduced ? '' : 'transition-all duration-200'
+            } cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-800 ${
               isActive
                 ? 'text-white dark:text-white drop-shadow-lg'
                 : 'text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
             }`}
+            role='tab'
+            aria-selected={isActive}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                const dir = e.key === 'ArrowRight' ? 1 : -1;
+                const next = Math.min(
+                  Math.max(activeIndex + dir, 0),
+                  safeOptions.length - 1
+                );
+                if (safeOptions[next]) onChange(safeOptions[next].value);
+              } else if (e.key === 'Home') {
+                e.preventDefault();
+                if (safeOptions[0]) onChange(safeOptions[0].value);
+              } else if (e.key === 'End') {
+                e.preventDefault();
+                if (safeOptions[safeOptions.length - 1])
+                  onChange(safeOptions[safeOptions.length - 1].value);
+              }
+            }}
           >
             {opt.label}
           </button>

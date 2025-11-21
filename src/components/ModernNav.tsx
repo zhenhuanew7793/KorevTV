@@ -2,9 +2,22 @@
 
 'use client';
 
-import { Cat, Clover, Film, Globe, Home, MoreHorizontal, PlaySquare, Radio, Search, Star, Tv, X } from 'lucide-react';
+import {
+  Cat,
+  Clover,
+  Film,
+  Globe,
+  Home,
+  MoreHorizontal,
+  PlaySquare,
+  Radio,
+  Search,
+  Star,
+  Tv,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { BackButton } from './BackButton';
@@ -22,7 +35,6 @@ interface NavItem {
 }
 
 export default function ModernNav() {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [active, setActive] = useState(pathname);
@@ -158,12 +170,20 @@ export default function ModernNav() {
                   onClick={() => setActive(item.href)}
                   className='group relative flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 whitespace-nowrap active:scale-[0.98]'
                 >
+                  {active && (
+                    <span
+                      className={`absolute inset-0 -z-10 rounded-full bg-gradient-to-r ${item.gradient} opacity-20 blur-md glow-breath`}
+                      aria-hidden
+                    />
+                  )}
                   {/* Icon */}
                   <div className='relative'>
                     <Icon
                       className={`w-5 h-5 transition-all duration-300 ${
                         active ? item.color : 'text-gray-600 dark:text-gray-400'
-                      } ${active ? 'scale-110' : 'group-hover:scale-110'} drop-shadow-sm`}
+                      } ${
+                        active ? 'scale-110' : 'group-hover:scale-110'
+                      } drop-shadow-sm`}
                     />
                   </div>
                   {/* Label */}
@@ -178,47 +198,49 @@ export default function ModernNav() {
                   </span>
                   {/* Active indicator dot */}
                   {active && (
-                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gradient-to-r ${item.gradient} shadow`} />
+                    <span
+                      className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gradient-to-r ${item.gradient} shadow`}
+                    />
                   )}
                 </Link>
               );
             })}
           </div>
         </LiquidGlassContainer>
-  </nav>
+      </nav>
 
-  {/* Desktop Top-Center Brand Pill (KorevTV) */}
-  <nav className='hidden md:block fixed top-3 left-1/2 -translate-x-1/2 z-50'>
-    <LiquidGlassContainer
-      className='px-5 py-2'
-      roundedClass='rounded-full'
-      intensity='high'
-      shadow='xl'
-      border='subtle'
-      animated
-      animatedMode='hover'
-      tint='blue'
-    >
-      <span aria-hidden className='title-sweep rounded-full' />
-      <span className='text-base sm:text-lg font-semibold tracking-wide bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 dark:from-green-400 dark:via-emerald-300 dark:to-teal-300 bg-clip-text text-transparent'>
-        {siteName}
-      </span>
-    </LiquidGlassContainer>
-  </nav>
-  {/* Desktop Top-Left Back Button */}
-  <nav className='hidden md:block fixed top-3 left-4 z-50'>
-    <LiquidGlassContainer
-      className='px-1 py-1'
-      roundedClass='rounded-full'
-      intensity='medium'
-      shadow='lg'
-      border='subtle'
-      animatedMode='hover'
-      tint='blue'
-    >
-      <BackButton />
-    </LiquidGlassContainer>
-  </nav>
+      {/* Desktop Top-Center Brand Pill (KorevTV) */}
+      <nav className='hidden md:block fixed top-3 left-1/2 -translate-x-1/2 z-50'>
+        <LiquidGlassContainer
+          className='px-5 py-2'
+          roundedClass='rounded-full'
+          intensity='high'
+          shadow='xl'
+          border='subtle'
+          animated
+          animatedMode='hover'
+          tint='blue'
+        >
+          <span aria-hidden className='title-sweep rounded-full' />
+          <span className='text-base sm:text-lg font-semibold tracking-wide bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 dark:from-green-400 dark:via-emerald-300 dark:to-teal-300 bg-clip-text text-transparent'>
+            {siteName}
+          </span>
+        </LiquidGlassContainer>
+      </nav>
+      {/* Desktop Top-Left Back Button */}
+      <nav className='hidden md:block fixed top-3 left-4 z-50'>
+        <LiquidGlassContainer
+          className='px-1 py-1'
+          roundedClass='rounded-full'
+          intensity='medium'
+          shadow='lg'
+          border='subtle'
+          animatedMode='hover'
+          tint='blue'
+        >
+          <BackButton />
+        </LiquidGlassContainer>
+      </nav>
       {/* Desktop Top-Right Controls (Theme + User) - restored */}
       <nav className='hidden md:block fixed top-3 right-4 z-50'>
         <LiquidGlassContainer
@@ -250,7 +272,9 @@ export default function ModernNav() {
           >
             {/* Header */}
             <div className='flex items-center justify-between px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50'>
-              <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>全部分类</h3>
+              <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
+                全部分类
+              </h3>
               <button
                 onClick={() => setShowMoreMenu(false)}
                 className='p-2 rounded-full hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors'
@@ -292,9 +316,7 @@ export default function ModernNav() {
                     </div>
                     <span
                       className={`text-xs font-medium ${
-                        active
-                          ? item.color
-                          : 'text-gray-700 dark:text-gray-300'
+                        active ? item.color : 'text-gray-700 dark:text-gray-300'
                       }`}
                     >
                       {item.label}
@@ -315,7 +337,13 @@ export default function ModernNav() {
         }}
       >
         {/* Liquid Glass Container - iOS WWDC25 Style */}
-        <LiquidGlassContainer className='mx-2 mb-2 overflow-hidden' roundedClass='rounded-[28px]' intensity='high' shadow='2xl' border='subtle'>
+        <LiquidGlassContainer
+          className='mx-2 mb-2 overflow-hidden'
+          roundedClass='rounded-[28px]'
+          intensity='high'
+          shadow='2xl'
+          border='subtle'
+        >
           {/* Floating gradient accent line on top */}
           <div className='h-[2px] bg-gradient-to-r from-transparent via-green-500/50 to-transparent'></div>
 
@@ -336,7 +364,9 @@ export default function ModernNav() {
                   <div className='relative'>
                     {/* Active background pill */}
                     {active && (
-                      <div className={`absolute -inset-2 bg-gradient-to-br ${item.gradient} opacity-15 rounded-2xl blur-sm`}></div>
+                      <div
+                        className={`absolute -inset-2 bg-gradient-to-br ${item.gradient} opacity-15 rounded-2xl blur-sm`}
+                      ></div>
                     )}
 
                     {/* Icon container */}
@@ -383,7 +413,10 @@ export default function ModernNav() {
               className='relative flex flex-col items-center justify-center gap-0.5 min-w-[56px] transition-all duration-300 active:scale-95'
             >
               <div className='relative flex items-center justify-center w-11 h-7 rounded-2xl transition-all duration-300 bg-transparent'>
-                <MoreHorizontal className='w-5 h-5 text-gray-600 dark:text-gray-400' strokeWidth={2} />
+                <MoreHorizontal
+                  className='w-5 h-5 text-gray-600 dark:text-gray-400'
+                  strokeWidth={2}
+                />
               </div>
             </button>
           </div>

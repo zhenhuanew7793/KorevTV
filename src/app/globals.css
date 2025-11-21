@@ -53,6 +53,25 @@
   .animate-scaleIn {
     animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
+  @keyframes glow-breath {
+    0% {
+      opacity: 0.12;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.25;
+      transform: scale(1.06);
+    }
+    100% {
+      opacity: 0.12;
+      transform: scale(1);
+    }
+  }
+
+  .glow-breath {
+    animation: glow-breath 3s ease-in-out infinite;
+  }
 }
 
 /* Liquid Glass 动效 */
@@ -160,6 +179,9 @@ html.dark .lgx-overlay {
 @media (prefers-reduced-motion: reduce) {
   .lgx-overlay,
   .lgx-shimmer {
+    animation: none !important;
+  }
+  .glow-breath {
     animation: none !important;
   }
 }
