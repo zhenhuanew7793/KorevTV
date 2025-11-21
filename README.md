@@ -1045,7 +1045,7 @@ services:
 
 ## 📊 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=SzeMeng76/LunaTV&type=Date)](https://www.star-history.com/#SzeMeng76/LunaTV&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Korean032/KorevTV&type=Date)](https://www.star-history.com/#Korean032/KorevTV&Date)
 
 ---
 

@@ -928,45 +928,21 @@ This project works with [OrionTV](https://github.com/zimplexing/OrionTV) on Andr
 
 For complete feature updates and bug fixes, see [CHANGELOG](CHANGELOG).
 
-### Latest Version: v5.6.2 (2025-11-06)
+### Latest Version: v5.6.3 (2025-11-21)
 
 #### Added
 
-- 🎬 Hero Banner Full Category Support: Added detailed descriptions to hero banner for all content types (movies, series, variety shows, short dramas, anime)
-- 📅 Upcoming Release Calendar: Added upcoming releases section displaying movie and TV show releases within the next 30 days
-- 🖼️ Release Calendar Poster Extraction: Implemented poster image scraping from manmankan website for upcoming content (supports lazy-loaded data-original)
-- 🎨 Aurora Mesh Gradient Background: Implemented Aurora Mesh Gradient background for release calendar page with animated blob effects
-- 📱 Mobile Banner Swipeable Card Layout: Implemented mobile-friendly swipeable card-style banner layout with touch gesture navigation
-- 🔖 Upcoming Type Badges: Added movie/TV show type badges for upcoming release cards (top-left corner)
-- ⭐ Upcoming Release Favoriting: Support favoriting upcoming releases, automatically converting to playable status after release
-- 🔄 Auto-update Favorite Episode Count: Playback page automatically updates placeholder episode count (99 episodes) in favorites to actual count
-- 📺 Post-load DVR Detection for Live Streams: Player uses video.seekable API after loading to detect DVR/timeshift support, displays notification banner when seekable range exceeds 60 seconds, adds button to enable progress bar and reload player in DVR mode
+- 🌟 Breathing glow for active navigation links (desktop bottom nav)
+- 📏 Responsive indicator for CapsuleSwitch via ResizeObserver
 
 #### Improved
 
-- 🎨 Release Calendar UI Beautification: Optimized release calendar page visual effects with gradient backgrounds and modern design
-- 📱 Large Screen Responsive Layout: Improved responsive layout effects on large screen devices
-- 🎯 Upcoming Content Deduplication: Deduplicate upcoming release data based on title, keeping earliest release date
-- 🚫 Disable Playback for Upcoming Content: Unreleased content shows "Coming Soon" instead of play button to prevent user confusion
-- 👁️ Hide Upcoming Episode Badges: Don't display placeholder episode counts for upcoming content to avoid misleading users
-- ⚡ Playback Progress Save Frequency: Increased playback progress save interval to reduce network overhead
-- 🔍 New Episode Detection Optimization: Skip redundant fetch requests during playback to optimize performance
-- 📊 Playback Record Request Optimization: Reduced playback record API request frequency to lower network burden
+- ♿ Accessibility: Keyboard navigation and ARIA roles for CapsuleSwitch
+- 🎞️ Motion compliance: Respect system “prefers-reduced-motion” for animations
 
 #### Fixed
 
-- 🖼️ manmankan Image Proxy Support: Added Referer support for manmankan.com to image proxy to bypass hotlink protection
-- 🔧 Douban Details Plot Summary Fix: Fixed extraction of complete plot summary from Douban details
-- 🗑️ Douban Details Cache Invalidation: Automatically invalidate cache when plot_summary is missing to ensure data integrity
-- 🔗 Short Drama Banner More Button Link Fix: Fixed more button link for short drama category in hero banner
-- 🔝 Play Page Back-to-Top Button Position Fix: Adjusted back-to-top button responsive position on mobile to prevent overlap with more menu
-- 📐 Search Page z-index Fix: Prevent bottom navigation from being covered by back-to-top button
-- 🎬 Banner Content Truncation Fix: Prevent hero banner content truncation when description is too long
-- 🎮 Video Player z-index Fix: Fixed mobile bottom menu being covered by video player
-- 🔍 Mobile Short Drama Search Parameter Fix: Use correct query parameter for mobile short drama search
-- 🐛 isUpcoming Variable Declaration Order Fix: Moved isUpcoming declaration before useEffect to resolve compilation error
-- 📦 getAllFavorites Import Fix: Use correct static import instead of dynamic import to fix TypeScript compilation error
-- 🎯 Async Details Fetch Fix: Fixed async details fetching logic for all hero banner items
+- 🧹 ESLint hook blocking issues: remove empty blocks in CapsuleSwitch
 
 ### Major Milestone Versions
 
@@ -1058,7 +1034,7 @@ Based on [MoonTV](https://github.com/MoonTechLab/LunaTV) with extensive customiz
 
 ## 📊 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=SzeMeng76/LunaTV&type=Date)](https://www.star-history.com/#SzeMeng76/LunaTV&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Korean032/KorevTV&type=Date)](https://www.star-history.com/#Korean032/KorevTV&Date)
 
 ---
 
