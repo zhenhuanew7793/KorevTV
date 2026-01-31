@@ -2,11 +2,19 @@
 
 'use client';
 
-import { Brain, Calendar, ChevronRight, Film, Play, Sparkles, Tv } from 'lucide-react';
+import {
+  Brain,
+  Calendar,
+  ChevronRight,
+  Film,
+  Play,
+  Sparkles,
+  Tv,
+} from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 
-import { AI_RECOMMEND_PRESETS } from '@/lib/ai-recommend.client';
+// import { AI_RECOMMEND_PRESETS } from '@/lib/ai-recommend.client';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import {
   BangumiCalendarData,
@@ -22,7 +30,7 @@ import {
 import { getDoubanCategories, getDoubanDetails } from '@/lib/douban.client';
 import { getRecommendedShortDramas } from '@/lib/shortdrama.client';
 import { cleanExpiredCache } from '@/lib/shortdrama-cache';
-import { ReleaseCalendarItem,ShortDramaItem } from '@/lib/types';
+import { ReleaseCalendarItem, ShortDramaItem } from '@/lib/types';
 import { DoubanItem } from '@/lib/types';
 
 import AIRecommendModal from '@/components/AIRecommendModal';
@@ -40,7 +48,9 @@ import { TelegramWelcomeModal } from '@/components/TelegramWelcomeModal';
 import VideoCard from '@/components/VideoCard';
 
 function HomeClient() {
-  const [activeTab, setActiveTab] = useState<'home' | 'continue' | 'favorites'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'continue' | 'favorites'>(
+    'home'
+  );
   const [hotMovies, setHotMovies] = useState<DoubanItem[]>([]);
   const [hotTvShows, setHotTvShows] = useState<DoubanItem[]>([]);
   const [hotVarietyShows, setHotVarietyShows] = useState<DoubanItem[]>([]);
@@ -48,11 +58,15 @@ function HomeClient() {
   const [bangumiCalendarData, setBangumiCalendarData] = useState<
     BangumiCalendarData[]
   >([]);
-  const [upcomingReleases, setUpcomingReleases] = useState<ReleaseCalendarItem[]>([]);
+  const [upcomingReleases, setUpcomingReleases] = useState<
+    ReleaseCalendarItem[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const { announcement } = useSite();
   const [username, setUsername] = useState<string>('');
-  const [rotationSeed, setRotationSeed] = useState<number>(() => Math.floor(Math.random() * 1000));
+  const [rotationSeed, setRotationSeed] = useState<number>(() =>
+    Math.floor(Math.random() * 1000)
+  );
   // 横幅轮换与缓存间隔（分钟）——如需调整，只改这里即可
   const ROTATION_TTL_MINUTES = 60; // 改为 1 小时
 
@@ -86,28 +100,7 @@ function HomeClient() {
   const [showAIRecommendModal, setShowAIRecommendModal] = useState(false);
   const [aiEnabled, setAiEnabled] = useState<boolean | null>(true); // 默认显示，检查后再决定
   const [aiCheckTriggered, setAiCheckTriggered] = useState(false); // 标记是否已检查AI状态
-  const [personalRecommendEnabled, setPersonalRecommendEnabled] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const v = localStorage.getItem('personalRecommendEnabled');
-      if (v !== null) return v === 'true';
-    }
-    return true;
-  });
-
-  // 首页分类快捷入口图标映射
-  const iconForTitle = useCallback((title: string) => {
-    const t = title.toLowerCase();
-    if (t.includes('热门')) return '🔥';
-    if (t.includes('电视剧') || t.includes('剧')) return '📺';
-    if (t.includes('喜剧')) return '😂';
-    if (t.includes('动作')) return '💥';
-    if (t.includes('爱情')) return '❤️';
-    if (t.includes('悬疑') || t.includes('推理')) return '🕵️';
-    if (t.includes('经典')) return '⭐';
-    if (t.includes('综艺') || t.includes('节目')) return '🎤';
-    if (t.includes('动漫') || t.includes('动画')) return '🎞️';
-    return '✨';
-  }, []);
+  // 首页分类快捷入口图标映射 (Removed unused function iconForTitle)
 
   // 合并初始化逻辑 - 优化性能，减少重渲染
   useEffect(() => {
@@ -161,16 +154,22 @@ function HomeClient() {
     };
 
     const win = window as typeof window & {
-      requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+      requestIdleCallback?: (
+        callback: IdleRequestCallback,
+        options?: IdleRequestOptions
+      ) => number;
       cancelIdleCallback?: (handle: number) => void;
     };
 
     if (typeof win.requestIdleCallback === 'function') {
-      idleCallbackId = win.requestIdleCallback(() => {
-        checkAIStatus().catch(() => {
-          // 错误已在内部处理
-        });
-      }, { timeout: 1500 });
+      idleCallbackId = win.requestIdleCallback(
+        () => {
+          checkAIStatus().catch(() => {
+            // 错误已在内部处理
+          });
+        },
+        { timeout: 1500 }
+      );
     } else {
       timeoutId = window.setTimeout(() => {
         checkAIStatus().catch(() => {
@@ -181,7 +180,10 @@ function HomeClient() {
 
     return () => {
       cancelled = true;
-      if (idleCallbackId !== undefined && typeof win.cancelIdleCallback === 'function') {
+      if (
+        idleCallbackId !== undefined &&
+        typeof win.cancelIdleCallback === 'function'
+      ) {
         win.cancelIdleCallback(idleCallbackId);
       }
       if (timeoutId !== undefined) {
@@ -206,198 +208,253 @@ function HomeClient() {
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
 
   const fetchRecommendData = useCallback(async () => {
-      try {
-        setLoading(true);
+    try {
+      setLoading(true);
 
-        // 并行获取热门电影、热门剧集、热门综艺、热门短剧和即将上映
-        const [moviesData, tvShowsData, varietyShowsData, shortDramasData, bangumiCalendarData, upcomingReleasesData] =
-          await Promise.allSettled([
-            getDoubanCategories({
-              kind: 'movie',
-              category: '热门',
-              type: '全部',
-            }),
-            getDoubanCategories({ kind: 'tv', category: 'tv', type: 'tv' }),
-            getDoubanCategories({ kind: 'tv', category: 'show', type: 'show' }),
-            getRecommendedShortDramas(undefined, 8),
-            GetBangumiCalendarData(),
-            fetch('/api/release-calendar?limit=20').then(res => {
-              if (!res.ok) {
-                console.error('获取即将上映数据失败，状态码:', res.status);
-                return { items: [] };
-              }
-              return res.json();
-            }),
-          ]);
-
-        // 处理电影数据并获取前2条的详情
-        if (moviesData.status === 'fulfilled' && moviesData.value?.code === 200) {
-          const movies = moviesData.value.list;
-          setHotMovies(movies);
-
-          // 异步获取轮换选择的电影详情（用于Hero Banner）
-          const movieDetailsPromises = (() => {
-            if (!Array.isArray(movies) || movies.length === 0) return [] as Promise<any>[];
-            const start = rotationSeed % movies.length;
-            const picks = [movies[start], movies[(start + 1) % movies.length]].filter(Boolean);
-            return picks.map(async (movie) => {
-              try {
-                const detailsRes = await getDoubanDetails(movie.id);
-                if (detailsRes.code === 200 && detailsRes.data?.plot_summary) {
-                  return { id: movie.id, plot_summary: detailsRes.data.plot_summary };
-                }
-              } catch (error) {
-                console.warn(`获取电影 ${movie.id} 详情失败:`, error);
-              }
-              return null;
-            });
-          })();
-          Promise.all(movieDetailsPromises).then((results) => {
-            setHotMovies(prev =>
-              prev.map(m => {
-                const detail = results.find(r => r?.id === m.id);
-                return detail ? { ...m, plot_summary: detail.plot_summary } : m;
-              })
-            );
-          });
-        } else {
-          console.warn('获取热门电影失败:', moviesData.status === 'rejected' ? moviesData.reason : '数据格式错误');
-        }
-
-        // 处理剧集数据并获取前2条的详情
-        if (tvShowsData.status === 'fulfilled' && tvShowsData.value?.code === 200) {
-          const tvShows = tvShowsData.value.list;
-          setHotTvShows(tvShows);
-
-          // 异步获取轮换选择的剧集详情（用于Hero Banner）
-          const tvDetailsPromises = (() => {
-            if (!Array.isArray(tvShows) || tvShows.length === 0) return [] as Promise<any>[];
-            const start = (rotationSeed + 11) % tvShows.length;
-            const picks = [tvShows[start], tvShows[(start + 1) % tvShows.length]].filter(Boolean);
-            return picks.map(async (show) => {
-              try {
-                const detailsRes = await getDoubanDetails(show.id);
-                if (detailsRes.code === 200 && detailsRes.data?.plot_summary) {
-                  return { id: show.id, plot_summary: detailsRes.data.plot_summary };
-                }
-              } catch (error) {
-                console.warn(`获取剧集 ${show.id} 详情失败:`, error);
-              }
-              return null;
-            });
-          })();
-          Promise.all(tvDetailsPromises).then((results) => {
-            setHotTvShows(prev =>
-              prev.map(s => {
-                const detail = results.find(r => r?.id === s.id);
-                return detail ? { ...s, plot_summary: detail.plot_summary } : s;
-              })
-            );
-          });
-        } else {
-          console.warn('获取热门剧集失败:', tvShowsData.status === 'rejected' ? tvShowsData.reason : '数据格式错误');
-        }
-
-        // 处理综艺数据并获取第1条的详情
-        if (varietyShowsData.status === 'fulfilled' && varietyShowsData.value?.code === 200) {
-          const varietyShows = varietyShowsData.value.list;
-          setHotVarietyShows(varietyShows);
-
-          // 异步获取轮换选择的综艺详情（用于Hero Banner）
-          if (varietyShows.length > 0) {
-            const start = (rotationSeed + 23) % varietyShows.length;
-            const show = varietyShows[start];
-            getDoubanDetails(show.id)
-              .then((detailsRes) => {
-                if (detailsRes.code === 200 && detailsRes.data?.plot_summary) {
-                  setHotVarietyShows(prev =>
-                    prev.map(s => s.id === show.id
-                      ? { ...s, plot_summary: detailsRes.data?.plot_summary || s.plot_summary }
-                      : s
-                    )
-                  );
-                }
-              })
-              .catch((error) => {
-                console.warn(`获取综艺 ${show.id} 详情失败:`, error);
-              });
+      // 并行获取热门电影、热门剧集、热门综艺、热门短剧和即将上映
+      const [
+        moviesData,
+        tvShowsData,
+        varietyShowsData,
+        shortDramasData,
+        bangumiCalendarData,
+        upcomingReleasesData,
+      ] = await Promise.allSettled([
+        getDoubanCategories({
+          kind: 'movie',
+          category: '热门',
+          type: '全部',
+        }),
+        getDoubanCategories({ kind: 'tv', category: 'tv', type: 'tv' }),
+        getDoubanCategories({ kind: 'tv', category: 'show', type: 'show' }),
+        getRecommendedShortDramas(undefined, 8),
+        GetBangumiCalendarData(),
+        fetch('/api/release-calendar?limit=20').then((res) => {
+          if (!res.ok) {
+            console.error('获取即将上映数据失败，状态码:', res.status);
+            return { items: [] };
           }
-        } else {
-          console.warn('获取热门综艺失败:', varietyShowsData.status === 'rejected' ? varietyShowsData.reason : '数据格式错误');
-        }
+          return res.json();
+        }),
+      ]);
 
-        // 处理短剧数据并获取前2条的详情
-        if (shortDramasData.status === 'fulfilled') {
-          const dramas = shortDramasData.value;
-          setHotShortDramas(dramas);
+      // 处理电影数据并获取前2条的详情
+      if (moviesData.status === 'fulfilled' && moviesData.value?.code === 200) {
+        const movies = moviesData.value.list;
+        setHotMovies(movies);
 
-          // 异步获取轮换选择的短剧详情（用于Hero Banner）
-          const shortDramaPromises = (() => {
-            if (!Array.isArray(dramas) || dramas.length === 0) return [] as Promise<any>[];
-            const start = (rotationSeed + 31) % dramas.length;
-            const picks = [dramas[start], dramas[(start + 1) % dramas.length]].filter(Boolean);
-            return picks.map(async (drama) => {
-              try {
-                const response = await fetch(`/api/shortdrama/detail?id=${drama.id}&episode=1`);
-                if (response.ok) {
-                  const detailData = await response.json();
-                  if (detailData.desc) {
-                    return { id: drama.id, description: detailData.desc };
-                  }
-                }
-              } catch (error) {
-                console.warn(`获取短剧 ${drama.id} 详情失败:`, error);
-              }
-              return null;
-            });
-          })();
-          Promise.all(shortDramaPromises).then((results) => {
-            setHotShortDramas(prev =>
-              prev.map(d => {
-                const detail = results.find(r => r?.id === d.id);
-                return detail ? { ...d, description: detail.description } : d;
-              })
-            );
-          });
-        } else {
-          console.warn('获取热门短剧失败:', shortDramasData.reason);
-          setHotShortDramas([]);
-        }
-
-        // 处理bangumi数据，防止接口失败导致页面崩溃
-        if (bangumiCalendarData.status === 'fulfilled' && Array.isArray(bangumiCalendarData.value)) {
-          const bangumiData = bangumiCalendarData.value;
-          setBangumiCalendarData(bangumiData);
-
-          // 获取今天的番剧并尝试获取详情（用于Hero Banner）
-          const today = new Date();
-          const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-          const currentWeekday = weekdays[today.getDay()];
-          const todayAnimes = bangumiData.find(
-            (item) => item.weekday.en === currentWeekday
-          )?.items || [];
-
-          // 如果今天有番剧且轮换选择的番剧没有summary，尝试获取详情
-          if (todayAnimes.length > 0) {
-            const index = (rotationSeed + 47) % todayAnimes.length;
-            const anime = todayAnimes[index];
-            if (anime && !anime.summary) {
+        // 异步获取轮换选择的电影详情（用于Hero Banner）
+        const movieDetailsPromises = (() => {
+          if (!Array.isArray(movies) || movies.length === 0)
+            return [] as Promise<any>[];
+          const start = rotationSeed % movies.length;
+          const picks = [
+            movies[start],
+            movies[(start + 1) % movies.length],
+          ].filter(Boolean);
+          return picks.map(async (movie) => {
             try {
-              const response = await fetch(`https://api.bgm.tv/v0/subjects/${anime.id}`);
+              const detailsRes = await getDoubanDetails(movie.id);
+              if (detailsRes.code === 200 && detailsRes.data?.plot_summary) {
+                return {
+                  id: movie.id,
+                  plot_summary: detailsRes.data.plot_summary,
+                };
+              }
+            } catch (error) {
+              console.warn(`获取电影 ${movie.id} 详情失败:`, error);
+            }
+            return null;
+          });
+        })();
+        Promise.all(movieDetailsPromises).then((results) => {
+          setHotMovies((prev) =>
+            prev.map((m) => {
+              const detail = results.find((r) => r?.id === m.id);
+              return detail ? { ...m, plot_summary: detail.plot_summary } : m;
+            })
+          );
+        });
+      } else {
+        console.warn(
+          '获取热门电影失败:',
+          moviesData.status === 'rejected' ? moviesData.reason : '数据格式错误'
+        );
+      }
+
+      // 处理剧集数据并获取前2条的详情
+      if (
+        tvShowsData.status === 'fulfilled' &&
+        tvShowsData.value?.code === 200
+      ) {
+        const tvShows = tvShowsData.value.list;
+        setHotTvShows(tvShows);
+
+        // 异步获取轮换选择的剧集详情（用于Hero Banner）
+        const tvDetailsPromises = (() => {
+          if (!Array.isArray(tvShows) || tvShows.length === 0)
+            return [] as Promise<any>[];
+          const start = (rotationSeed + 11) % tvShows.length;
+          const picks = [
+            tvShows[start],
+            tvShows[(start + 1) % tvShows.length],
+          ].filter(Boolean);
+          return picks.map(async (show) => {
+            try {
+              const detailsRes = await getDoubanDetails(show.id);
+              if (detailsRes.code === 200 && detailsRes.data?.plot_summary) {
+                return {
+                  id: show.id,
+                  plot_summary: detailsRes.data.plot_summary,
+                };
+              }
+            } catch (error) {
+              console.warn(`获取剧集 ${show.id} 详情失败:`, error);
+            }
+            return null;
+          });
+        })();
+        Promise.all(tvDetailsPromises).then((results) => {
+          setHotTvShows((prev) =>
+            prev.map((s) => {
+              const detail = results.find((r) => r?.id === s.id);
+              return detail ? { ...s, plot_summary: detail.plot_summary } : s;
+            })
+          );
+        });
+      } else {
+        console.warn(
+          '获取热门剧集失败:',
+          tvShowsData.status === 'rejected'
+            ? tvShowsData.reason
+            : '数据格式错误'
+        );
+      }
+
+      // 处理综艺数据并获取第1条的详情
+      if (
+        varietyShowsData.status === 'fulfilled' &&
+        varietyShowsData.value?.code === 200
+      ) {
+        const varietyShows = varietyShowsData.value.list;
+        setHotVarietyShows(varietyShows);
+
+        // 异步获取轮换选择的综艺详情（用于Hero Banner）
+        if (varietyShows.length > 0) {
+          const start = (rotationSeed + 23) % varietyShows.length;
+          const show = varietyShows[start];
+          getDoubanDetails(show.id)
+            .then((detailsRes) => {
+              if (detailsRes.code === 200 && detailsRes.data?.plot_summary) {
+                setHotVarietyShows((prev) =>
+                  prev.map((s) =>
+                    s.id === show.id
+                      ? {
+                          ...s,
+                          plot_summary:
+                            detailsRes.data?.plot_summary || s.plot_summary,
+                        }
+                      : s
+                  )
+                );
+              }
+            })
+            .catch((error) => {
+              console.warn(`获取综艺 ${show.id} 详情失败:`, error);
+            });
+        }
+      } else {
+        console.warn(
+          '获取热门综艺失败:',
+          varietyShowsData.status === 'rejected'
+            ? varietyShowsData.reason
+            : '数据格式错误'
+        );
+      }
+
+      // 处理短剧数据并获取前2条的详情
+      if (shortDramasData.status === 'fulfilled') {
+        const dramas = shortDramasData.value;
+        setHotShortDramas(dramas);
+
+        // 异步获取轮换选择的短剧详情（用于Hero Banner）
+        const shortDramaPromises = (() => {
+          if (!Array.isArray(dramas) || dramas.length === 0)
+            return [] as Promise<any>[];
+          const start = (rotationSeed + 31) % dramas.length;
+          const picks = [
+            dramas[start],
+            dramas[(start + 1) % dramas.length],
+          ].filter(Boolean);
+          return picks.map(async (drama) => {
+            try {
+              const response = await fetch(
+                `/api/shortdrama/detail?id=${drama.id}&episode=1`
+              );
+              if (response.ok) {
+                const detailData = await response.json();
+                if (detailData.desc) {
+                  return { id: drama.id, description: detailData.desc };
+                }
+              }
+            } catch (error) {
+              console.warn(`获取短剧 ${drama.id} 详情失败:`, error);
+            }
+            return null;
+          });
+        })();
+        Promise.all(shortDramaPromises).then((results) => {
+          setHotShortDramas((prev) =>
+            prev.map((d) => {
+              const detail = results.find((r) => r?.id === d.id);
+              return detail ? { ...d, description: detail.description } : d;
+            })
+          );
+        });
+      } else {
+        console.warn('获取热门短剧失败:', shortDramasData.reason);
+        setHotShortDramas([]);
+      }
+
+      // 处理bangumi数据，防止接口失败导致页面崩溃
+      if (
+        bangumiCalendarData.status === 'fulfilled' &&
+        Array.isArray(bangumiCalendarData.value)
+      ) {
+        const bangumiData = bangumiCalendarData.value;
+        setBangumiCalendarData(bangumiData);
+
+        // 获取今天的番剧并尝试获取详情（用于Hero Banner）
+        const today = new Date();
+        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const currentWeekday = weekdays[today.getDay()];
+        const todayAnimes =
+          bangumiData.find((item) => item.weekday.en === currentWeekday)
+            ?.items || [];
+
+        // 如果今天有番剧且轮换选择的番剧没有summary，尝试获取详情
+        if (todayAnimes.length > 0) {
+          const index = (rotationSeed + 47) % todayAnimes.length;
+          const anime = todayAnimes[index];
+          if (anime && !anime.summary) {
+            try {
+              const response = await fetch(
+                `https://api.bgm.tv/v0/subjects/${anime.id}`
+              );
               if (response.ok) {
                 const detailData = await response.json();
                 if (detailData.summary) {
                   // 更新 bangumiCalendarData 中对应的番剧
-                  setBangumiCalendarData(prev =>
-                    prev.map(dayData => {
+                  setBangumiCalendarData((prev) =>
+                    prev.map((dayData) => {
                       if (dayData.weekday.en === currentWeekday) {
                         return {
                           ...dayData,
-                          items: dayData.items.map(item =>
+                          items: dayData.items.map((item) =>
                             item.id === anime.id
                               ? { ...item, summary: detailData.summary }
                               : item
-                          )
+                          ),
                         };
                       }
                       return dayData;
@@ -408,71 +465,98 @@ function HomeClient() {
             } catch (error) {
               console.warn(`获取番剧 ${anime.id} 详情失败:`, error);
             }
-            }
           }
-        } else {
-          console.warn('Bangumi接口失败或返回数据格式错误:',
-            bangumiCalendarData.status === 'rejected' ? bangumiCalendarData.reason : '数据格式错误');
-          setBangumiCalendarData([]);
         }
+      } else {
+        console.warn(
+          'Bangumi接口失败或返回数据格式错误:',
+          bangumiCalendarData.status === 'rejected'
+            ? bangumiCalendarData.reason
+            : '数据格式错误'
+        );
+        setBangumiCalendarData([]);
+      }
 
-        // 处理即将上映数据
-        if (upcomingReleasesData.status === 'fulfilled' && upcomingReleasesData.value?.items) {
-          const releases = upcomingReleasesData.value.items;
-          console.log('📅 获取到的即将上映数据:', releases.length, '条');
+      // 处理即将上映数据
+      if (
+        upcomingReleasesData.status === 'fulfilled' &&
+        upcomingReleasesData.value?.items
+      ) {
+        const releases = upcomingReleasesData.value.items;
+        console.log('📅 获取到的即将上映数据:', releases.length, '条');
 
-          // 过滤出未来上映的作品（未来90天内）
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const ninetyDaysLater = new Date(today);
-          ninetyDaysLater.setDate(ninetyDaysLater.getDate() + 90);
+        // 过滤出未来上映的作品（未来90天内）
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const ninetyDaysLater = new Date(today);
+        ninetyDaysLater.setDate(ninetyDaysLater.getDate() + 90);
 
-          const upcoming = releases.filter((item: ReleaseCalendarItem) => {
-            const releaseDate = new Date(item.releaseDate);
-            const isUpcoming = releaseDate >= today && releaseDate <= ninetyDaysLater;
-            return isUpcoming;
-          });
+        const upcoming = releases.filter((item: ReleaseCalendarItem) => {
+          const releaseDate = new Date(item.releaseDate);
+          const isUpcoming =
+            releaseDate >= today && releaseDate <= ninetyDaysLater;
+          return isUpcoming;
+        });
 
-          // 去重：基于标题去重，保留最早的那条记录
-          const uniqueUpcoming = upcoming.reduce((acc: ReleaseCalendarItem[], current: ReleaseCalendarItem) => {
-            const existingItem = acc.find(item => item.title === current.title);
+        // 去重：基于标题去重，保留最早的那条记录
+        const uniqueUpcoming = upcoming.reduce(
+          (acc: ReleaseCalendarItem[], current: ReleaseCalendarItem) => {
+            const existingItem = acc.find(
+              (item) => item.title === current.title
+            );
             if (!existingItem) {
               acc.push(current);
             } else {
               // 如果已存在，保留上映日期更早的
-              const existingIndex = acc.findIndex(item => item.title === current.title);
-              if (new Date(current.releaseDate) < new Date(existingItem.releaseDate)) {
+              const existingIndex = acc.findIndex(
+                (item) => item.title === current.title
+              );
+              if (
+                new Date(current.releaseDate) <
+                new Date(existingItem.releaseDate)
+              ) {
                 acc[existingIndex] = current;
               }
             }
             return acc;
-          }, []);
+          },
+          []
+        );
 
-          // 优化展示分布：按日期排序后等距采样，覆盖更长时间范围
-          const sortedByDate = uniqueUpcoming.sort((a, b) => new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime());
-          const maxItems = 20;
-          const n = sortedByDate.length;
-          const picks: ReleaseCalendarItem[] = [];
-          if (n <= maxItems) {
-            picks.push(...sortedByDate);
-          } else {
-            const step = n / maxItems;
-            for (let i = 0; i < maxItems; i++) {
-              const idx = Math.floor(i * step);
-              picks.push(sortedByDate[idx]);
-            }
-          }
-          console.log('📅 分布优化后的即将上映数据:', picks.length, '条');
-          setUpcomingReleases(picks);
+        // 优化展示分布：按日期排序后等距采样，覆盖更长时间范围
+        const sortedByDate = uniqueUpcoming.sort(
+          (a, b) =>
+            new Date(a.releaseDate).getTime() -
+            new Date(b.releaseDate).getTime()
+        );
+        const maxItems = 20;
+        const n = sortedByDate.length;
+        const picks: ReleaseCalendarItem[] = [];
+        if (n <= maxItems) {
+          picks.push(...sortedByDate);
         } else {
-          console.warn('获取即将上映数据失败:', upcomingReleasesData.status === 'rejected' ? upcomingReleasesData.reason : '数据格式错误');
-          setUpcomingReleases([]);
+          const step = n / maxItems;
+          for (let i = 0; i < maxItems; i++) {
+            const idx = Math.floor(i * step);
+            picks.push(sortedByDate[idx]);
+          }
         }
-      } catch (error) {
-        console.error('获取推荐数据失败:', error);
-      } finally {
-        setLoading(false);
+        console.log('📅 分布优化后的即将上映数据:', picks.length, '条');
+        setUpcomingReleases(picks);
+      } else {
+        console.warn(
+          '获取即将上映数据失败:',
+          upcomingReleasesData.status === 'rejected'
+            ? upcomingReleasesData.reason
+            : '数据格式错误'
+        );
+        setUpcomingReleases([]);
       }
+    } catch (error) {
+      console.error('获取推荐数据失败:', error);
+    } finally {
+      setLoading(false);
+    }
   }, [rotationSeed]);
 
   useEffect(() => {
@@ -485,7 +569,11 @@ function HomeClient() {
     // 每30分钟自动刷新一次（页面可见时）
     const refreshMs = ROTATION_TTL_MINUTES * 60 * 1000;
     const timer = setInterval(() => {
-      if (typeof document === 'undefined' || document.visibilityState !== 'visible') return;
+      if (
+        typeof document === 'undefined' ||
+        document.visibilityState !== 'visible'
+      )
+        return;
       setRotationSeed((prev) => {
         const next = (prev + 1) % 1000000;
         try {
@@ -507,7 +595,10 @@ function HomeClient() {
 
     // 根据保存时间排序（从近到远）
     const sorted = Object.entries(allFavorites)
-      .sort(([, a], [, b]) => b.save_time - a.save_time)
+      .sort(
+        ([, a]: [string, any], [, b]: [string, any]) =>
+          b.save_time - a.save_time
+      )
       .map(([key, fav]) => {
         const plusIndex = key.indexOf('+');
         const source = key.slice(0, plusIndex);
@@ -589,11 +680,11 @@ function HomeClient() {
                       {username}
                     </span>
                   )}
-                  <span className='inline-block animate-wave origin-bottom-right'>👋</span>
+                  <span className='inline-block animate-wave origin-bottom-right'>
+                    👋
+                  </span>
                 </h2>
-                <p className='text-sm text-white/90'>
-                  发现更多精彩影视内容 ✨
-                </p>
+                <p className='text-sm text-white/90'>发现更多精彩影视内容 ✨</p>
               </div>
 
               {/* 装饰图标 - 更小更精致 */}
@@ -613,7 +704,9 @@ function HomeClient() {
               { label: '收藏夹', value: 'favorites' },
             ]}
             active={activeTab}
-            onChange={(value) => setActiveTab(value as 'home' | 'continue' | 'favorites')}
+            onChange={(value) =>
+              setActiveTab(value as 'home' | 'continue' | 'favorites')
+            }
           />
 
           {/* AI推荐按钮 - 只在功能启用时显示，添加脉冲动画 */}
@@ -671,14 +764,21 @@ function HomeClient() {
                     {/* SVG 插画 - 空收藏夹 */}
                     <div className='mb-6 relative'>
                       <div className='absolute inset-0 bg-gradient-to-r from-pink-300 to-purple-300 dark:from-pink-600 dark:to-purple-600 opacity-20 blur-3xl rounded-full animate-pulse'></div>
-                      <svg className='w-32 h-32 relative z-10' viewBox='0 0 200 200' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                      <svg
+                        className='w-32 h-32 relative z-10'
+                        viewBox='0 0 200 200'
+                        fill='none'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
                         {/* 心形主体 */}
-                        <path d='M100 170C100 170 30 130 30 80C30 50 50 30 70 30C85 30 95 40 100 50C105 40 115 30 130 30C150 30 170 50 170 80C170 130 100 170 100 170Z'
+                        <path
+                          d='M100 170C100 170 30 130 30 80C30 50 50 30 70 30C85 30 95 40 100 50C105 40 115 30 130 30C150 30 170 50 170 80C170 130 100 170 100 170Z'
                           className='fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500 transition-colors duration-300'
                           strokeWidth='3'
                         />
                         {/* 虚线边框 */}
-                        <path d='M100 170C100 170 30 130 30 80C30 50 50 30 70 30C85 30 95 40 100 50C105 40 115 30 130 30C150 30 170 50 170 80C170 130 100 170 100 170Z'
+                        <path
+                          d='M100 170C100 170 30 130 30 80C30 50 50 30 70 30C85 30 95 40 100 50C105 40 115 30 130 30C150 30 170 50 170 80C170 130 100 170 100 170Z'
                           fill='none'
                           stroke='currentColor'
                           strokeWidth='2'
@@ -702,7 +802,14 @@ function HomeClient() {
           ) : activeTab === 'continue' ? (
             // 继续观看视图（仅首页的中间页）
             <section className='mb-8'>
-              <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
+              <LiquidGlassContainer
+                roundedClass='rounded-2xl'
+                intensity='high'
+                shadow='xl'
+                border='subtle'
+                animated={false}
+                tint='blue'
+              >
                 <ContinueWatching />
               </LiquidGlassContainer>
             </section>
@@ -711,132 +818,232 @@ function HomeClient() {
             <>
               {null}
               {/* Hero Banner 轮播 */}
-              {!loading && (hotMovies.length > 0 || hotTvShows.length > 0 || hotVarietyShows.length > 0 || hotShortDramas.length > 0) && (
-                <section className='mb-8'>
-                  <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
-                  <HeroBanner
-                    items={[
-                      // 豆瓣电影
-                      ...((() => {
-                        const selected = (hotMovies && hotMovies.length > 0) ? ((rotationSeed !== undefined) ? hotMovies.slice(0) : hotMovies) : [];
-                        const start = rotationSeed % (selected.length || 1);
-                        const picks = selected.length > 0 ? [selected[start % selected.length], selected[(start + 1) % selected.length]].filter(Boolean) : [];
-                        return picks;
-                      })()).map((movie) => ({
-                        id: movie.id,
-                        title: movie.title,
-                        poster: movie.poster,
-                        description: movie.plot_summary,
-                        year: movie.year,
-                        rate: movie.rate,
-                        douban_id: Number(movie.id),
-                        type: 'movie',
-                        region: Array.isArray(movie.countries) ? movie.countries[0] : undefined,
-                        tags: Array.isArray(movie.genres) ? movie.genres : undefined,
-                        creators: [
-                          ...(Array.isArray(movie.directors) ? movie.directors : []),
-                          ...(Array.isArray(movie.cast) ? movie.cast.slice(0, 4) : [])
-                        ],
-                      })),
-                      // 豆瓣电视剧
-                      ...((() => {
-                        const selected = (hotTvShows && hotTvShows.length > 0) ? hotTvShows.slice(0) : [];
-                        const start = (rotationSeed + 11) % (selected.length || 1);
-                        const picks = selected.length > 0 ? [selected[start % selected.length], selected[(start + 1) % selected.length]].filter(Boolean) : [];
-                        return picks;
-                      })()).map((show) => ({
-                        id: show.id,
-                        title: show.title,
-                        poster: show.poster,
-                        description: show.plot_summary,
-                        year: show.year,
-                        rate: show.rate,
-                        douban_id: Number(show.id),
-                        type: 'tv',
-                        region: Array.isArray(show.countries) ? show.countries[0] : undefined,
-                        tags: Array.isArray(show.genres) ? show.genres : undefined,
-                        creators: [
-                          ...(Array.isArray(show.directors) ? show.directors : []),
-                          ...(Array.isArray(show.cast) ? show.cast.slice(0, 4) : [])
-                        ],
-                      })),
-                      // 豆瓣综艺
-                      ...((() => {
-                        const selected = (hotVarietyShows && hotVarietyShows.length > 0) ? hotVarietyShows.slice(0) : [];
-                        const start = (rotationSeed + 23) % (selected.length || 1);
-                        const picks = selected.length > 0 ? [selected[start % selected.length]].filter(Boolean) : [];
-                        return picks;
-                      })()).map((show) => ({
-                        id: show.id,
-                        title: show.title,
-                        poster: show.poster,
-                        description: show.plot_summary,
-                        year: show.year,
-                        rate: show.rate,
-                        douban_id: Number(show.id),
-                        type: 'variety',
-                        region: Array.isArray(show.countries) ? show.countries[0] : undefined,
-                        tags: Array.isArray(show.genres) ? show.genres : undefined,
-                        creators: [
-                          ...(Array.isArray(show.directors) ? show.directors : []),
-                          ...(Array.isArray(show.cast) ? show.cast.slice(0, 4) : [])
-                        ],
-                      })),
-                      // 短剧（非豆瓣）
-                      ...((() => {
-                        const selected = (hotShortDramas && hotShortDramas.length > 0) ? hotShortDramas.slice(0) : [];
-                        const start = (rotationSeed + 31) % (selected.length || 1);
-                        const picks = selected.length > 0 ? [selected[start % selected.length], selected[(start + 1) % selected.length]].filter(Boolean) : [];
-                        return picks;
-                      })()).map((drama) => ({
-                        id: drama.id,
-                        title: drama.name,
-                        poster: drama.cover,
-                        description: drama.description,
-                        year: '',
-                        rate: drama.score ? drama.score.toString() : '',
-                        type: 'shortdrama',
-                        region: undefined,
-                        tags: undefined,
-                        creators: undefined,
-                      })),
-                      // 番剧（非豆瓣，来自 bangumi）
-                      ...(bangumiCalendarData.length > 0
-                        ? (() => {
-                            const today = new Date();
-                            const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                            const currentWeekday = weekdays[today.getDay()];
-                            const todayAnimes = bangumiCalendarData.find(
-                              (item) => item.weekday.en === currentWeekday
-                            )?.items || [];
-                            const index = todayAnimes.length > 0 ? ((rotationSeed + 47) % todayAnimes.length) : 0;
-                            return todayAnimes.slice(index, index + 1).map((anime) => ({
-                              id: anime.id,
-                              title: anime.name_cn || anime.name,
-                              poster: anime.images?.large || anime.images?.common || anime.images?.medium || '/placeholder-poster.jpg',
-                              description: anime.summary,
-                              year: anime.air_date?.split('-')?.[0] || '',
-                              rate: anime.rating?.score?.toFixed(1) || '',
-                              douban_id: anime.id,
-                              type: 'anime',
-                              region: '日本',
-                              tags: undefined,
-                              creators: undefined,
-                            }));
-                          })()
-                        : [])
-                    ]}
-                    autoPlayInterval={5000}
-                    showControls={true}
-                    showIndicators={true}
-                    onRecommend={() => setShowAIRecommendModal(true)}
-                  />
-                  </LiquidGlassContainer>
-                </section>
-              )}
+              {!loading &&
+                (hotMovies.length > 0 ||
+                  hotTvShows.length > 0 ||
+                  hotVarietyShows.length > 0 ||
+                  hotShortDramas.length > 0) && (
+                  <section className='mb-8'>
+                    <LiquidGlassContainer
+                      roundedClass='rounded-2xl'
+                      intensity='high'
+                      shadow='xl'
+                      border='subtle'
+                      animated={false}
+                      tint='blue'
+                    >
+                      <HeroBanner
+                        items={[
+                          // 豆瓣电影
+                          ...(() => {
+                            const selected =
+                              hotMovies && hotMovies.length > 0
+                                ? rotationSeed !== undefined
+                                  ? hotMovies.slice(0)
+                                  : hotMovies
+                                : [];
+                            const start = rotationSeed % (selected.length || 1);
+                            const picks =
+                              selected.length > 0
+                                ? [
+                                    selected[start % selected.length],
+                                    selected[(start + 1) % selected.length],
+                                  ].filter(Boolean)
+                                : [];
+                            return picks;
+                          })().map((movie) => ({
+                            id: movie.id,
+                            title: movie.title,
+                            poster: movie.poster,
+                            description: movie.plot_summary,
+                            year: movie.year,
+                            rate: movie.rate,
+                            douban_id: Number(movie.id),
+                            type: 'movie',
+                            region: Array.isArray(movie.countries)
+                              ? movie.countries[0]
+                              : undefined,
+                            tags: Array.isArray(movie.genres)
+                              ? movie.genres
+                              : undefined,
+                            creators: [
+                              ...(Array.isArray(movie.directors)
+                                ? movie.directors
+                                : []),
+                              ...(Array.isArray(movie.cast)
+                                ? movie.cast.slice(0, 4)
+                                : []),
+                            ],
+                          })),
+                          // 豆瓣电视剧
+                          ...(() => {
+                            const selected =
+                              hotTvShows && hotTvShows.length > 0
+                                ? hotTvShows.slice(0)
+                                : [];
+                            const start =
+                              (rotationSeed + 11) % (selected.length || 1);
+                            const picks =
+                              selected.length > 0
+                                ? [
+                                    selected[start % selected.length],
+                                    selected[(start + 1) % selected.length],
+                                  ].filter(Boolean)
+                                : [];
+                            return picks;
+                          })().map((show) => ({
+                            id: show.id,
+                            title: show.title,
+                            poster: show.poster,
+                            description: show.plot_summary,
+                            year: show.year,
+                            rate: show.rate,
+                            douban_id: Number(show.id),
+                            type: 'tv',
+                            region: Array.isArray(show.countries)
+                              ? show.countries[0]
+                              : undefined,
+                            tags: Array.isArray(show.genres)
+                              ? show.genres
+                              : undefined,
+                            creators: [
+                              ...(Array.isArray(show.directors)
+                                ? show.directors
+                                : []),
+                              ...(Array.isArray(show.cast)
+                                ? show.cast.slice(0, 4)
+                                : []),
+                            ],
+                          })),
+                          // 豆瓣综艺
+                          ...(() => {
+                            const selected =
+                              hotVarietyShows && hotVarietyShows.length > 0
+                                ? hotVarietyShows.slice(0)
+                                : [];
+                            const start =
+                              (rotationSeed + 23) % (selected.length || 1);
+                            const picks =
+                              selected.length > 0
+                                ? [selected[start % selected.length]].filter(
+                                    Boolean
+                                  )
+                                : [];
+                            return picks;
+                          })().map((show) => ({
+                            id: show.id,
+                            title: show.title,
+                            poster: show.poster,
+                            description: show.plot_summary,
+                            year: show.year,
+                            rate: show.rate,
+                            douban_id: Number(show.id),
+                            type: 'variety',
+                            region: Array.isArray(show.countries)
+                              ? show.countries[0]
+                              : undefined,
+                            tags: Array.isArray(show.genres)
+                              ? show.genres
+                              : undefined,
+                            creators: [
+                              ...(Array.isArray(show.directors)
+                                ? show.directors
+                                : []),
+                              ...(Array.isArray(show.cast)
+                                ? show.cast.slice(0, 4)
+                                : []),
+                            ],
+                          })),
+                          // 短剧（非豆瓣）
+                          ...(() => {
+                            const selected =
+                              hotShortDramas && hotShortDramas.length > 0
+                                ? hotShortDramas.slice(0)
+                                : [];
+                            const start =
+                              (rotationSeed + 31) % (selected.length || 1);
+                            const picks =
+                              selected.length > 0
+                                ? [
+                                    selected[start % selected.length],
+                                    selected[(start + 1) % selected.length],
+                                  ].filter(Boolean)
+                                : [];
+                            return picks;
+                          })().map((drama) => ({
+                            id: drama.id,
+                            title: drama.name,
+                            poster: drama.cover,
+                            description: drama.description,
+                            year: '',
+                            rate: drama.score ? drama.score.toString() : '',
+                            type: 'shortdrama',
+                            region: undefined,
+                            tags: undefined,
+                            creators: undefined,
+                          })),
+                          // 番剧（非豆瓣，来自 bangumi）
+                          ...(bangumiCalendarData.length > 0
+                            ? (() => {
+                                const today = new Date();
+                                const weekdays = [
+                                  'Sun',
+                                  'Mon',
+                                  'Tue',
+                                  'Wed',
+                                  'Thu',
+                                  'Fri',
+                                  'Sat',
+                                ];
+                                const currentWeekday = weekdays[today.getDay()];
+                                const todayAnimes =
+                                  bangumiCalendarData.find(
+                                    (item) => item.weekday.en === currentWeekday
+                                  )?.items || [];
+                                const index =
+                                  todayAnimes.length > 0
+                                    ? (rotationSeed + 47) % todayAnimes.length
+                                    : 0;
+                                return todayAnimes
+                                  .slice(index, index + 1)
+                                  .map((anime) => ({
+                                    id: anime.id,
+                                    title: anime.name_cn || anime.name,
+                                    poster:
+                                      anime.images?.large ||
+                                      anime.images?.common ||
+                                      anime.images?.medium ||
+                                      '/placeholder-poster.jpg',
+                                    description: anime.summary,
+                                    year: anime.air_date?.split('-')?.[0] || '',
+                                    rate: anime.rating?.score?.toFixed(1) || '',
+                                    douban_id: anime.id,
+                                    type: 'anime',
+                                    region: '日本',
+                                    tags: undefined,
+                                    creators: undefined,
+                                  }));
+                              })()
+                            : []),
+                        ]}
+                        autoPlayInterval={5000}
+                        showControls={true}
+                        showIndicators={true}
+                        onRecommend={() => setShowAIRecommendModal(true)}
+                      />
+                    </LiquidGlassContainer>
+                  </section>
+                )}
               {loading && (
                 <section className='mb-8'>
-                  <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
+                  <LiquidGlassContainer
+                    roundedClass='rounded-2xl'
+                    intensity='high'
+                    shadow='xl'
+                    border='subtle'
+                    animated={false}
+                    tint='blue'
+                  >
                     <div className='w-full h-[320px] sm:h-[360px] md:h-[300px] rounded-2xl border border-white/20 dark:border-gray-700/50 bg-white/60 dark:bg-gray-800/50 backdrop-blur-md shadow-[0_12px_36px_rgba(0,0,0,0.15)] animate-pulse'></div>
                   </LiquidGlassContainer>
                 </section>
@@ -846,16 +1053,93 @@ function HomeClient() {
 
               {/* 即将上映 */}
               {(() => {
-                console.log('🔍 即将上映 section 渲染检查:', { loading, upcomingReleasesCount: upcomingReleases.length });
+                console.log('🔍 即将上映 section 渲染检查:', {
+                  loading,
+                  upcomingReleasesCount: upcomingReleases.length,
+                });
                 return null;
               })()}
               {!loading && upcomingReleases.length > 0 && (
                 <section className='mb-8'>
-                  <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
+                  <LiquidGlassContainer
+                    roundedClass='rounded-2xl'
+                    intensity='high'
+                    shadow='xl'
+                    border='subtle'
+                    animated={false}
+                    tint='blue'
+                  >
+                    <div className='mb-4 flex items-center justify-between'>
+                      <SectionTitle
+                        title='即将上映'
+                        icon={Calendar}
+                        iconColor='text-orange-500'
+                      />
+                      <Link
+                        href='/release-calendar'
+                        className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
+                      >
+                        查看更多
+                        <ChevronRight className='w-4 h-4 ml-1' />
+                      </Link>
+                    </div>
+                    <ScrollableRow>
+                      {upcomingReleases.map((release, index) => {
+                        // 计算距离上映还有几天
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const releaseDate = new Date(release.releaseDate);
+                        const daysUntilRelease = Math.ceil(
+                          (releaseDate.getTime() - today.getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        );
+
+                        return (
+                          <div
+                            key={`${release.id}-${index}`}
+                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          >
+                            <VideoCard
+                              source='upcoming_release'
+                              id={release.id}
+                              source_name='即将上映'
+                              from='douban'
+                              title={release.title}
+                              poster={
+                                release.cover || '/placeholder-poster.jpg'
+                              }
+                              year={release.releaseDate.split('-')[0]}
+                              type={release.type}
+                              remarks={`${daysUntilRelease}天后上映`}
+                              query={release.title}
+                              episodes={release.type === 'tv' ? 99 : 1}
+                            />
+                          </div>
+                        );
+                      })}
+                    </ScrollableRow>
+                  </LiquidGlassContainer>
+                </section>
+              )}
+
+              {/* 热门电影 */}
+              <section className='mb-8'>
+                <LiquidGlassContainer
+                  roundedClass='rounded-2xl'
+                  intensity='high'
+                  shadow='xl'
+                  border='subtle'
+                  animated={false}
+                  tint='blue'
+                >
                   <div className='mb-4 flex items-center justify-between'>
-                    <SectionTitle title="即将上映" icon={Calendar} iconColor="text-orange-500" />
+                    <SectionTitle
+                      title='热门电影'
+                      icon={Film}
+                      iconColor='text-red-500'
+                    />
                     <Link
-                      href='/release-calendar'
+                      href='/douban?type=movie'
                       className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
                     >
                       查看更多
@@ -863,256 +1147,253 @@ function HomeClient() {
                     </Link>
                   </div>
                   <ScrollableRow>
-                    {upcomingReleases.map((release, index) => {
-                      // 计算距离上映还有几天
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      const releaseDate = new Date(release.releaseDate);
-                      const daysUntilRelease = Math.ceil((releaseDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-                      return (
-                        <div
-                          key={`${release.id}-${index}`}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
-                        >
-                          <VideoCard
-                            source='upcoming_release'
-                            id={release.id}
-                            source_name='即将上映'
-                            from='douban'
-                            title={release.title}
-                            poster={release.cover || '/placeholder-poster.jpg'}
-                            year={release.releaseDate.split('-')[0]}
-                            type={release.type}
-                            remarks={`${daysUntilRelease}天后上映`}
-                            query={release.title}
-                            episodes={release.type === 'tv' ? 99 : 1}
-                          />
-                        </div>
-                      );
-                    })}
+                    {loading
+                      ? // 加载状态显示灰色占位数据
+                        Array.from({ length: 8 }).map((_, index) => (
+                          <SkeletonCard key={index} />
+                        ))
+                      : // 显示真实数据
+                        hotMovies.map((movie, index) => (
+                          <div
+                            key={index}
+                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          >
+                            <VideoCard
+                              from='douban'
+                              title={movie.title}
+                              poster={movie.poster}
+                              douban_id={Number(movie.id)}
+                              rate={movie.rate}
+                              year={movie.year}
+                              type='movie'
+                            />
+                          </div>
+                        ))}
                   </ScrollableRow>
-                  </LiquidGlassContainer>
-                </section>
-              )}
-
-              {/* 热门电影 */}
-              <section className='mb-8'>
-                <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
-                <div className='mb-4 flex items-center justify-between'>
-                  <SectionTitle title="热门电影" icon={Film} iconColor="text-red-500" />
-                  <Link
-                    href='/douban?type=movie'
-                    className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
-                  >
-                    查看更多
-                    <ChevronRight className='w-4 h-4 ml-1' />
-                  </Link>
-                </div>
-                <ScrollableRow>
-                  {loading
-                    ? // 加载状态显示灰色占位数据
-                    Array.from({ length: 8 }).map((_, index) => (
-                      <SkeletonCard key={index} />
-                    ))
-                    : // 显示真实数据
-                    hotMovies.map((movie, index) => (
-                      <div
-                        key={index}
-                        className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
-                      >
-                        <VideoCard
-                          from='douban'
-                          title={movie.title}
-                          poster={movie.poster}
-                          douban_id={Number(movie.id)}
-                          rate={movie.rate}
-                          year={movie.year}
-                          type='movie'
-                        />
-                      </div>
-                    ))}
-                </ScrollableRow>
                 </LiquidGlassContainer>
               </section>
 
               {/* 热门剧集 */}
               <section className='mb-8 home-section'>
-                <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
-                <div className='mb-4 flex items-center justify-between'>
-                  <SectionTitle title="热门剧集" icon={Tv} iconColor="text-blue-500" />
-                  <Link
-                    href='/douban?type=tv'
-                    className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
-                  >
-                    查看更多
-                    <ChevronRight className='w-4 h-4 ml-1' />
-                  </Link>
-                </div>
-                <ScrollableRow>
-                  {loading
-                    ? // 加载状态显示灰色占位数据
-                    Array.from({ length: 8 }).map((_, index) => (
-                      <SkeletonCard key={index} />
-                    ))
-                    : // 显示真实数据
-                    hotTvShows.map((show, index) => (
-                      <div
-                        key={index}
-                        className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
-                      >
-                        <VideoCard
-                          from='douban'
-                          title={show.title}
-                          poster={show.poster}
-                          douban_id={Number(show.id)}
-                          rate={show.rate}
-                          year={show.year}
-                          type='tv'
-                        />
-                      </div>
-                    ))}
-                </ScrollableRow>
+                <LiquidGlassContainer
+                  roundedClass='rounded-2xl'
+                  intensity='high'
+                  shadow='xl'
+                  border='subtle'
+                  animated={false}
+                  tint='blue'
+                >
+                  <div className='mb-4 flex items-center justify-between'>
+                    <SectionTitle
+                      title='热门剧集'
+                      icon={Tv}
+                      iconColor='text-blue-500'
+                    />
+                    <Link
+                      href='/douban?type=tv'
+                      className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
+                    >
+                      查看更多
+                      <ChevronRight className='w-4 h-4 ml-1' />
+                    </Link>
+                  </div>
+                  <ScrollableRow>
+                    {loading
+                      ? // 加载状态显示灰色占位数据
+                        Array.from({ length: 8 }).map((_, index) => (
+                          <SkeletonCard key={index} />
+                        ))
+                      : // 显示真实数据
+                        hotTvShows.map((show, index) => (
+                          <div
+                            key={index}
+                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          >
+                            <VideoCard
+                              from='douban'
+                              title={show.title}
+                              poster={show.poster}
+                              douban_id={Number(show.id)}
+                              rate={show.rate}
+                              year={show.year}
+                              type='tv'
+                            />
+                          </div>
+                        ))}
+                  </ScrollableRow>
                 </LiquidGlassContainer>
               </section>
 
               {/* 每日新番放送 */}
               <section className='mb-8 home-section'>
-                <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
-                <div className='mb-4 flex items-center justify-between'>
-                  <SectionTitle title="新番放送" icon={Calendar} iconColor="text-purple-500" />
-                  <Link
-                    href='/douban?type=anime'
-                    className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
-                  >
-                    查看更多
-                    <ChevronRight className='w-4 h-4 ml-1' />
-                  </Link>
-                </div>
-                <ScrollableRow>
-                  {loading
-                    ? // 加载状态显示灰色占位数据
-                    Array.from({ length: 8 }).map((_, index) => (
-                      <SkeletonCard key={index} />
-                    ))
-                    : // 展示当前日期的番剧
-                    (() => {
-                      // 获取当前日期对应的星期
-                      const today = new Date();
-                      const weekdays = [
-                        'Sun',
-                        'Mon',
-                        'Tue',
-                        'Wed',
-                        'Thu',
-                        'Fri',
-                        'Sat',
-                      ];
-                      const currentWeekday = weekdays[today.getDay()];
+                <LiquidGlassContainer
+                  roundedClass='rounded-2xl'
+                  intensity='high'
+                  shadow='xl'
+                  border='subtle'
+                  animated={false}
+                  tint='blue'
+                >
+                  <div className='mb-4 flex items-center justify-between'>
+                    <SectionTitle
+                      title='新番放送'
+                      icon={Calendar}
+                      iconColor='text-purple-500'
+                    />
+                    <Link
+                      href='/douban?type=anime'
+                      className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
+                    >
+                      查看更多
+                      <ChevronRight className='w-4 h-4 ml-1' />
+                    </Link>
+                  </div>
+                  <ScrollableRow>
+                    {loading
+                      ? // 加载状态显示灰色占位数据
+                        Array.from({ length: 8 }).map((_, index) => (
+                          <SkeletonCard key={index} />
+                        ))
+                      : // 展示当前日期的番剧
+                        (() => {
+                          // 获取当前日期对应的星期
+                          const today = new Date();
+                          const weekdays = [
+                            'Sun',
+                            'Mon',
+                            'Tue',
+                            'Wed',
+                            'Thu',
+                            'Fri',
+                            'Sat',
+                          ];
+                          const currentWeekday = weekdays[today.getDay()];
 
-                      // 找到当前星期对应的番剧数据
-                      const todayAnimes =
-                        bangumiCalendarData.find(
-                          (item) => item.weekday.en === currentWeekday
-                        )?.items || [];
+                          // 找到当前星期对应的番剧数据
+                          const todayAnimes =
+                            bangumiCalendarData.find(
+                              (item) => item.weekday.en === currentWeekday
+                            )?.items || [];
 
-                      return todayAnimes.map((anime, index) => (
-                        <div
-                          key={`${anime.id}-${index}`}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
-                        >
-                          <VideoCard
-                            from='douban'
-                            title={anime.name_cn || anime.name}
-                            poster={
-                              anime.images?.large ||
-                              anime.images?.common ||
-                              anime.images?.medium ||
-                              anime.images?.small ||
-                              anime.images?.grid ||
-                              '/placeholder-poster.jpg'
-                            }
-                            douban_id={anime.id}
-                            rate={anime.rating?.score?.toFixed(1) || ''}
-                            year={anime.air_date?.split('-')?.[0] || ''}
-                            isBangumi={true}
-                          />
-                        </div>
-                      ));
-                    })()}
-                </ScrollableRow>
+                          return todayAnimes.map((anime, index) => (
+                            <div
+                              key={`${anime.id}-${index}`}
+                              className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                            >
+                              <VideoCard
+                                from='douban'
+                                title={anime.name_cn || anime.name}
+                                poster={
+                                  anime.images?.large ||
+                                  anime.images?.common ||
+                                  anime.images?.medium ||
+                                  anime.images?.small ||
+                                  anime.images?.grid ||
+                                  '/placeholder-poster.jpg'
+                                }
+                                douban_id={anime.id}
+                                rate={anime.rating?.score?.toFixed(1) || ''}
+                                year={anime.air_date?.split('-')?.[0] || ''}
+                                isBangumi={true}
+                              />
+                            </div>
+                          ));
+                        })()}
+                  </ScrollableRow>
                 </LiquidGlassContainer>
               </section>
 
               {/* 热门综艺 */}
               <section className='mb-8 home-section'>
-                <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
-                <div className='mb-4 flex items-center justify-between'>
-                  <SectionTitle title="热门综艺" icon={Sparkles} iconColor="text-pink-500" />
-                  <Link
-                    href='/douban?type=show'
-                    className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
-                  >
-                    查看更多
-                    <ChevronRight className='w-4 h-4 ml-1' />
-                  </Link>
-                </div>
-                <ScrollableRow>
-                  {loading
-                    ? // 加载状态显示灰色占位数据
-                    Array.from({ length: 8 }).map((_, index) => (
-                      <SkeletonCard key={index} />
-                    ))
-                    : // 显示真实数据
-                    hotVarietyShows.map((show, index) => (
-                      <div
-                        key={index}
-                        className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
-                      >
-                        <VideoCard
-                          from='douban'
-                          title={show.title}
-                          poster={show.poster}
-                          douban_id={Number(show.id)}
-                          rate={show.rate}
-                          year={show.year}
-                          type='variety'
-                        />
-                      </div>
-                    ))}
-                </ScrollableRow>
+                <LiquidGlassContainer
+                  roundedClass='rounded-2xl'
+                  intensity='high'
+                  shadow='xl'
+                  border='subtle'
+                  animated={false}
+                  tint='blue'
+                >
+                  <div className='mb-4 flex items-center justify-between'>
+                    <SectionTitle
+                      title='热门综艺'
+                      icon={Sparkles}
+                      iconColor='text-pink-500'
+                    />
+                    <Link
+                      href='/douban?type=show'
+                      className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
+                    >
+                      查看更多
+                      <ChevronRight className='w-4 h-4 ml-1' />
+                    </Link>
+                  </div>
+                  <ScrollableRow>
+                    {loading
+                      ? // 加载状态显示灰色占位数据
+                        Array.from({ length: 8 }).map((_, index) => (
+                          <SkeletonCard key={index} />
+                        ))
+                      : // 显示真实数据
+                        hotVarietyShows.map((show, index) => (
+                          <div
+                            key={index}
+                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          >
+                            <VideoCard
+                              from='douban'
+                              title={show.title}
+                              poster={show.poster}
+                              douban_id={Number(show.id)}
+                              rate={show.rate}
+                              year={show.year}
+                              type='variety'
+                            />
+                          </div>
+                        ))}
+                  </ScrollableRow>
                 </LiquidGlassContainer>
               </section>
 
               {/* 热门短剧 */}
               <section className='mb-8'>
-                <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animatedMode='hover' tint='blue'>
-                <div className='mb-4 flex items-center justify-between'>
-                  <SectionTitle title="热门短剧" icon={Play} iconColor="text-orange-500" />
-                  <Link
-                    href='/shortdrama'
-                    className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
-                  >
-                    查看更多
-                    <ChevronRight className='w-4 h-4 ml-1' />
-                  </Link>
-                </div>
-                <ScrollableRow>
-                  {loading
-                    ? // 加载状态显示灰色占位数据
-                    Array.from({ length: 8 }).map((_, index) => (
-                      <SkeletonCard key={index} />
-                    ))
-                    : // 显示真实数据
-                    hotShortDramas.map((drama, index) => (
-                      <div
-                        key={index}
-                        className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
-                      >
-                        <ShortDramaCard drama={drama} />
-                      </div>
-                    ))}
-                </ScrollableRow>
+                <LiquidGlassContainer
+                  roundedClass='rounded-2xl'
+                  intensity='high'
+                  shadow='xl'
+                  border='subtle'
+                  animatedMode='hover'
+                  tint='blue'
+                >
+                  <div className='mb-4 flex items-center justify-between'>
+                    <SectionTitle
+                      title='热门短剧'
+                      icon={Play}
+                      iconColor='text-orange-500'
+                    />
+                    <Link
+                      href='/shortdrama'
+                      className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
+                    >
+                      查看更多
+                      <ChevronRight className='w-4 h-4 ml-1' />
+                    </Link>
+                  </div>
+                  <ScrollableRow>
+                    {loading
+                      ? // 加载状态显示灰色占位数据
+                        Array.from({ length: 8 }).map((_, index) => (
+                          <SkeletonCard key={index} />
+                        ))
+                      : // 显示真实数据
+                        hotShortDramas.map((drama, index) => (
+                          <div
+                            key={index}
+                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          >
+                            <ShortDramaCard drama={drama} />
+                          </div>
+                        ))}
+                  </ScrollableRow>
                 </LiquidGlassContainer>
               </section>
             </>
@@ -1121,8 +1402,9 @@ function HomeClient() {
       </div>
       {announcement && showAnnouncement && (
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm dark:bg-black/70 p-4 transition-opacity duration-300 ${showAnnouncement ? '' : 'opacity-0 pointer-events-none'
-            }`}
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm dark:bg-black/70 p-4 transition-opacity duration-300 ${
+            showAnnouncement ? '' : 'opacity-0 pointer-events-none'
+          }`}
           onTouchStart={(e) => {
             // 如果点击的是背景区域，阻止触摸事件冒泡，防止背景滚动
             if (e.target === e.currentTarget) {
@@ -1189,81 +1471,7 @@ function HomeClient() {
         isOpen={showAIRecommendModal}
         onClose={() => setShowAIRecommendModal(false)}
       />
-      {/* 为你推荐 / 最近热播 区块（基于 AIRecommend） */}
-      {(aiEnabled === true && aiCheckTriggered && personalRecommendEnabled) && (
-        <div className='mt-8 space-y-6'>
-          {/* 为你推荐 */}
-          <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
-          <div>
-            <div className='mb-3 flex items-center justify-between'>
-              <SectionTitle title='为你推荐' icon={Sparkles} iconColor='text-pink-500' />
-              <div className='flex items-center gap-3'>
-                <div className='text-xs text-gray-500 dark:text-gray-400'>数据来源：AI推荐服务（可在管理后台调整）</div>
-                <button
-                  onClick={() => setShowAIRecommendModal(true)}
-                  className='text-xs px-3 py-1 rounded-full bg-indigo-600 text-white hover:bg-indigo-700'
-                >
-                  打开AI推荐
-                </button>
-              </div>
-            </div>
-            <div className='text-xs text-gray-600 dark:text-gray-300'>
-              根据你的“继续观看”和“收藏”偏好，获取个性化推荐。
-            </div>
-            {/* 分类快捷入口宫格 */}
-            <div className='mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 max-w-3xl'>
-              {AI_RECOMMEND_PRESETS.slice(0, 8).map((preset, index) => (
-                <button
-                  key={index}
-                  onClick={() => setShowAIRecommendModal(true)}
-                  className='flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition-all'
-                >
-                  <span className='text-base leading-none'>{iconForTitle(preset.title)}</span>
-                  <span className='text-sm font-medium text-gray-900 dark:text-gray-100'>{preset.title}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          </LiquidGlassContainer>
-
-          {/* 最近热播 */}
-          <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
-          <div>
-            <div className='mb-3 flex items-center justify-between'>
-              <SectionTitle title='最近热播' icon={Tv} iconColor='text-red-500' />
-              <div className='flex items-center gap-3'>
-                <div className='text-xs text-gray-500 dark:text-gray-400'>数据来源：AI推荐服务（热门趋势）</div>
-                <button
-                  onClick={() => setShowAIRecommendModal(true)}
-                  className='text-xs px-3 py-1 rounded-full bg-indigo-600 text-white hover:bg-indigo-700'
-                >
-                  查看热门
-                </button>
-              </div>
-            </div>
-            <div className='text-xs text-gray-600 dark:text-gray-300'>
-              快速浏览近期热门影视内容，支持按类型提问。
-            </div>
-          </div>
-          </LiquidGlassContainer>
-
-          {/* 个性化开关 */}
-          <div className='flex items-center justify-end'>
-            <div className='flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300'>
-              <span>个性化推荐</span>
-              <CapsuleSwitch
-                options={[{ label: '开', value: 'on' }, { label: '关', value: 'off' }]}
-                active={personalRecommendEnabled ? 'on' : 'off'}
-                onChange={(val: string) => {
-                  const enabled = val === 'on';
-                  setPersonalRecommendEnabled(enabled);
-                  try { localStorage.setItem('personalRecommendEnabled', String(enabled)); } catch { void 0; }
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 为你推荐 / 最近热播 区块已移除 */}
       {/* 悬浮 AI 助手按钮 */}
       <div className='fixed right-4 bottom-20 md:bottom-6 z-40'>
         <button
@@ -1272,7 +1480,9 @@ function HomeClient() {
           aria-label='打开AI助手'
         >
           <Brain className='w-5 h-5' />
-          <span className='hidden sm:inline text-sm font-semibold'>AI 助手</span>
+          <span className='hidden sm:inline text-sm font-semibold'>
+            AI 助手
+          </span>
         </button>
       </div>
     </PageLayout>

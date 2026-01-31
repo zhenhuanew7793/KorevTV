@@ -21,7 +21,7 @@ export default function LiquidGlassContainer({
   className,
   roundedClass = 'rounded-2xl',
   intensity = 'medium',
-  border = 'subtle',
+  border: _border = 'subtle', // Keep for compat, but unused
   shadow = 'lg',
   animated = true,
   animatedMode = 'inview',
@@ -31,6 +31,7 @@ export default function LiquidGlassContainer({
   const [inView, setInView] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [motionReduced, setMotionReduced] = useState(false);
+
   useEffect(() => {
     if (!animated || animatedMode !== 'inview') return;
     const el = rootRef.current;
@@ -56,21 +57,31 @@ export default function LiquidGlassContainer({
       setMotionReduced(mq.matches);
       mq.addEventListener?.('change', handler);
       return () => mq.removeEventListener?.('change', handler);
-    } catch {}
+    } catch {
+      // ignore
+    }
   }, []);
-  const intensityClasses =
-    intensity === 'strong'
-      ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-3xl'
-      : intensity === 'high'
-      ? 'bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl'
-      : intensity === 'low'
-      ? 'bg-white/30 dark:bg-gray-900/30 backdrop-blur-sm'
-      : 'bg-white/50 dark:bg-gray-900/50 backdrop-blur-lg';
 
-  const borderClasses =
-    border === 'subtle'
-      ? 'border border-white/20 dark:border-gray-800/30'
-      : 'border border-white/30 dark:border-gray-700/40';
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!rootRef.current) return;
+    const rect = rootRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    rootRef.current.style.setProperty('--lgx-spotlight-x', `${x}px`);
+    rootRef.current.style.setProperty('--lgx-spotlight-y', `${y}px`);
+  };
+
+  const intensityClass = clsx({
+    'lgx-intensity-strong': intensity === 'strong',
+    'lgx-intensity-low': intensity === 'low',
+    // medium/high use default
+  });
+
+  const tintClass = clsx({
+    'lgx-tint-blue': tint === 'blue',
+    'lgx-tint-pink': tint === 'pink',
+    'lgx-tint-neutral': tint === 'neutral',
+  });
 
   const shadowMap: Record<string, string> = {
     none: 'shadow-none',
@@ -81,51 +92,42 @@ export default function LiquidGlassContainer({
     '2xl': 'shadow-2xl',
   };
 
-  const classes = clsx(
-    'relative overflow-hidden lgx-glass',
-    roundedClass,
-    intensityClasses,
-    borderClasses,
-    shadowMap[shadow],
-    className,
-    tint === 'blue' ? 'lgx-tint-blue' : tint === 'pink' ? 'lgx-tint-pink' : 'lgx-tint-neutral'
-  );
-
-  const overlayIntensityClass =
-    intensity === 'strong'
-      ? 'lgx-overlay--strong'
-      : intensity === 'high'
-      ? 'lgx-overlay--high'
-      : intensity === 'low'
-      ? 'lgx-overlay--low'
-      : 'lgx-overlay--medium';
-
   const shouldAnimate =
-    animated && !motionReduced &&
-    (animatedMode === 'always' || (animatedMode === 'hover' && isHovered) || (animatedMode === 'inview' && inView));
+    animated &&
+    !motionReduced &&
+    (animatedMode === 'always' ||
+      (animatedMode === 'hover' && isHovered) ||
+      (animatedMode === 'inview' && inView));
 
   return (
     <div
       ref={rootRef}
-      className={classes}
+      className={clsx(
+        'lgx-container',
+        roundedClass,
+        intensityClass,
+        tintClass,
+        shadowMap[shadow],
+        className
+      )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onMouseMove={handleMouseMove}
     >
-      <span aria-hidden className='lgx-specular' />
-      <span aria-hidden className='lgx-edge' />
-      {shouldAnimate && (
-        <>
-          <span
-            aria-hidden
-            className={clsx('lgx-overlay', overlayIntensityClass)}
-          />
-          <span
-            aria-hidden
-            className={clsx('lgx-shimmer', overlayIntensityClass)}
-          />
-        </>
-      )}
-      {children}
+      {/* 1. Fluid Background Layer - DISABLED */}
+      {/* {shouldAnimate && <div className='lgx-fluid-bg' />} */}
+
+      {/* 2. Spotlight Effect (Mouse Follow) */}
+      <div className='lgx-spotlight' />
+
+      {/* 3. Specular Highlight (The "Edge Glint") */}
+      <div className='lgx-specular' />
+
+      {/* 4. Shimmer Animation (Optional overlay) */}
+      {shouldAnimate && <div className='lgx-shimmer' />}
+
+      {/* Content */}
+      <div className='relative z-10'>{children}</div>
     </div>
   );
 }
