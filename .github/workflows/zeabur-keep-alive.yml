@@ -1,0 +1,21 @@
+name: Zeabur Auto Keep Alive
+
+on:
+  schedule:
+    # 每 3 天的凌晨 0 点运行一次 (UTC 时间)
+    - cron: '0 0 */3 * *'
+  workflow_dispatch: # 允许你手动在 Actions 页面点击运行测试
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Empty Commit
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit --allow-empty -m "Chore: Keep Zeabur alive via auto-redeploy"
+          git push
